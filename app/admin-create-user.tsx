@@ -14,6 +14,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DateOfBirthField } from '@/components/admin/date-of-birth-field';
+import { OccupationSelectField } from '@/components/admin/occupation-select-field';
+import type { AdminOccupation } from '@/constants/admin-occupations';
+import { ADMIN_OCCUPATIONS } from '@/constants/admin-occupations';
 import {
   BACKGROUND_COLOR,
   BORDER_COLOR,
@@ -28,21 +32,21 @@ import {
   type CreateUserPayload,
 } from '@/services/admin-service';
 
-type AdminFieldName = keyof CreateUserPayload;
+type TextFieldName = Exclude<
+  keyof CreateUserPayload,
+  'dateOfBirth' | 'occupation'
+>;
 
-type AdminField = {
-  name: AdminFieldName;
+type TextField = {
+  name: TextFieldName;
   placeholder: string;
 };
 
-const ADMIN_FIELDS: AdminField[] = [
+const TEXT_FIELDS_BEFORE_DATE_OF_BIRTH: TextField[] = [
   { name: 'firstName', placeholder: 'Enter first name' },
   { name: 'lastName', placeholder: 'Enter last name' },
   { name: 'email', placeholder: 'Enter email address' },
   { name: 'phone', placeholder: 'Enter phone number' },
-  { name: 'dateOfBirth', placeholder: 'Enter date of birth' },
-  { name: 'address', placeholder: 'Enter address' },
-  { name: 'occupation', placeholder: 'Select occupation' },
 ];
 
 const EMPTY_FORM_VALUES: CreateUserPayload = {
@@ -71,6 +75,10 @@ function isValidEmail(value: string): boolean {
   return value.includes('@') && value.includes('.');
 }
 
+function isValidOccupation(value: string): value is AdminOccupation {
+  return ADMIN_OCCUPATIONS.includes(value as AdminOccupation);
+}
+
 export default function AdminCreateUserScreen() {
   const router = useRouter();
   const [formValues, setFormValues] =
@@ -79,14 +87,18 @@ export default function AdminCreateUserScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const trimmedFormValues = getTrimmedFormValues(formValues);
-  const hasFilledFields = Object.values(trimmedFormValues).every(
-    (value) => value.length > 0,
-  );
+  const hasFilledTextFields =
+    TEXT_FIELDS_BEFORE_DATE_OF_BIRTH.every(
+      (field) => trimmedFormValues[field.name].length > 0,
+    ) && trimmedFormValues.address.length > 0;
+  const hasDateOfBirth = trimmedFormValues.dateOfBirth.length > 0;
+  const hasValidOccupation = isValidOccupation(trimmedFormValues.occupation);
   const hasValidEmail = isValidEmail(trimmedFormValues.email);
-  const isFormComplete = hasFilledFields && hasValidEmail;
+  const isFormComplete =
+    hasFilledTextFields && hasDateOfBirth && hasValidOccupation && hasValidEmail;
   const shouldDisableSubmit = !isFormComplete || isSubmitting;
 
-  function handleChange(fieldName: AdminFieldName, value: string) {
+  function handleChange(fieldName: TextFieldName, value: string) {
     setFormValues((currentValues) => ({
       ...currentValues,
       [fieldName]: value,
@@ -143,7 +155,7 @@ export default function AdminCreateUserScreen() {
           <Text style={styles.screenTitle}>Create new user</Text>
 
           <View style={styles.form}>
-            {ADMIN_FIELDS.map((field) => (
+            {TEXT_FIELDS_BEFORE_DATE_OF_BIRTH.map((field) => (
               <TextInput
                 key={field.name}
                 style={styles.input}
@@ -158,6 +170,39 @@ export default function AdminCreateUserScreen() {
                 accessibilityLabel={field.placeholder}
               />
             ))}
+
+            <DateOfBirthField
+              value={formValues.dateOfBirth}
+              onChange={(value) =>
+                setFormValues((currentValues) => ({
+                  ...currentValues,
+                  dateOfBirth: value,
+                }))
+              }
+              isEditable={!isSubmitting}
+            />
+
+            <TextInput
+              style={styles.input}
+              value={formValues.address}
+              onChangeText={(value) => handleChange('address', value)}
+              placeholder="Enter address"
+              placeholderTextColor={PLACEHOLDER_COLOR}
+              autoCorrect={false}
+              editable={!isSubmitting}
+              accessibilityLabel="Enter address"
+            />
+
+            <OccupationSelectField
+              value={formValues.occupation}
+              onChange={(value) =>
+                setFormValues((currentValues) => ({
+                  ...currentValues,
+                  occupation: value,
+                }))
+              }
+              isEditable={!isSubmitting}
+            />
 
             {errorMessage ? (
               <Text style={styles.errorText} accessibilityRole="alert">
