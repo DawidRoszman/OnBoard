@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 
+import { AdminFormFieldShell } from '@/components/admin/admin-form-field-shell';
 import {
   ADMIN_OCCUPATIONS,
   type AdminOccupation,
@@ -24,24 +25,33 @@ const PLACEHOLDER = 'Select occupation';
 
 type OccupationSelectFieldProps = {
   value: string;
-  onChange: (value: AdminOccupation) => void;
+  onCommit: (value: AdminOccupation) => void;
+  onBlur?: () => void;
   isEditable?: boolean;
+  errorMessage?: string;
 };
 
 export function OccupationSelectField({
   value,
-  onChange,
+  onCommit,
+  onBlur,
   isEditable = true,
+  errorMessage,
 }: OccupationSelectFieldProps) {
   const [isPickerVisible, setIsPickerVisible] = useState(false);
 
-  function handleSelect(occupation: AdminOccupation) {
-    onChange(occupation);
+  function dismissPicker() {
     setIsPickerVisible(false);
+    onBlur?.();
+  }
+
+  function handleSelect(occupation: AdminOccupation) {
+    setIsPickerVisible(false);
+    onCommit(occupation);
   }
 
   return (
-    <>
+    <AdminFormFieldShell errorMessage={errorMessage}>
       <Pressable
         style={styles.field}
         onPress={() => isEditable && setIsPickerVisible(true)}
@@ -61,10 +71,10 @@ export function OccupationSelectField({
         visible={isPickerVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setIsPickerVisible(false)}>
+        onRequestClose={dismissPicker}>
         <Pressable
           style={styles.modalOverlay}
-          onPress={() => setIsPickerVisible(false)}>
+          onPress={dismissPicker}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Select occupation</Text>
             {ADMIN_OCCUPATIONS.map((occupation) => {
@@ -94,7 +104,7 @@ export function OccupationSelectField({
           </View>
         </Pressable>
       </Modal>
-    </>
+    </AdminFormFieldShell>
   );
 }
 

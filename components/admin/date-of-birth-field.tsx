@@ -3,7 +3,7 @@ import DateTimePicker, {
   DateTimePickerAndroid,
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Modal,
   Platform,
@@ -15,6 +15,7 @@ import {
   View,
 } from 'react-native';
 
+import { AdminFormFieldShell } from '@/components/admin/admin-form-field-shell';
 import {
   BORDER_COLOR,
   BRAND_COLOR,
@@ -47,7 +48,10 @@ function clampToMaximumBirthDate(date: Date): Date {
 type DateOfBirthFieldProps = {
   value: string;
   onChange: (value: string) => void;
+  onCommit?: (value: string) => void;
+  onBlur?: () => void;
   isEditable?: boolean;
+  errorMessage?: string;
 };
 
 function formatDateOfBirth(date: Date): string {
@@ -116,7 +120,10 @@ const WebDateInput = TextInput as typeof TextInput & {
 export function DateOfBirthField({
   value,
   onChange,
+  onCommit,
+  onBlur,
   isEditable = true,
+  errorMessage,
 }: DateOfBirthFieldProps) {
   const [isIosPickerVisible, setIsIosPickerVisible] = useState(false);
   const [iosPickerDate, setIosPickerDate] = useState(
@@ -126,16 +133,40 @@ export function DateOfBirthField({
   const selectedDate = clampToMaximumBirthDate(
     parseDateOfBirth(value) ?? new Date(1990, 0, 1),
   );
+  const latestWebValueRef = useRef(value);
+
+  useEffect(() => {
+    latestWebValueRef.current = value;
+  }, [value]);
+
+  function handleWebBlur() {
+    if (onCommit) {
+      onCommit(latestWebValueRef.current);
+      return;
+    }
+
+    onBlur?.();
+  }
 
   function handleAndroidDateChange(
     event: DateTimePickerEvent,
     nextDate?: Date,
   ) {
-    if (event.type === 'dismissed' || !nextDate) {
+    if (event.type === 'set' && nextDate) {
+      const formattedDate = formatDateOfBirth(
+        clampToMaximumBirthDate(nextDate),
+      );
+
+      if (onCommit) {
+        onCommit(formattedDate);
+      } else {
+        onChange(formattedDate);
+      }
+
       return;
     }
 
-    onChange(formatDateOfBirth(clampToMaximumBirthDate(nextDate)));
+    onBlur?.();
   }
 
   function openDatePicker() {
@@ -160,50 +191,68 @@ export function DateOfBirthField({
   }
 
   function handleIosDone() {
-    onChange(formatDateOfBirth(clampToMaximumBirthDate(iosPickerDate)));
+    const formattedDate = formatDateOfBirth(
+      clampToMaximumBirthDate(iosPickerDate),
+    );
+
     setIsIosPickerVisible(false);
+
+    if (onCommit) {
+      onCommit(formattedDate);
+    } else {
+      onChange(formattedDate);
+      onBlur?.();
+    }
   }
 
   function handleIosCancel() {
     setIsIosPickerVisible(false);
+    onBlur?.();
   }
 
   if (Platform.OS === 'web') {
     return (
-      <View style={styles.field}>
-        <WebDateInput
-          style={styles.valueText}
-          value={toIsoDate(value)}
-          onChangeText={(isoValue) => {
-            const nextValue = fromIsoDate(isoValue);
+      <AdminFormFieldShell errorMessage={errorMessage}>
+        <View style={styles.field}>
+          <WebDateInput
+            style={styles.valueText}
+            value={toIsoDate(value)}
+            onChangeText={(isoValue) => {
+              const nextValue = fromIsoDate(isoValue);
+              latestWebValueRef.current = nextValue;
 
-            if (!nextValue) {
-              onChange('');
-              return;
-            }
+              if (!nextValue) {
+                onChange('');
+                return;
+              }
 
-            const parsedDate = parseDateOfBirth(nextValue);
+              const parsedDate = parseDateOfBirth(nextValue);
 
-            if (parsedDate && parsedDate.getTime() > maximumBirthDate.getTime()) {
-              return;
-            }
+              if (
+                parsedDate &&
+                parsedDate.getTime() > maximumBirthDate.getTime()
+              ) {
+                return;
+              }
 
-            onChange(nextValue);
-          }}
-          placeholder={PLACEHOLDER}
-          placeholderTextColor={PLACEHOLDER_COLOR}
-          editable={isEditable}
-          accessibilityLabel={PLACEHOLDER}
-          type="date"
-          max={getMaximumBirthDateIso()}
-        />
-        <Ionicons name="calendar-outline" size={18} color={BRAND_COLOR} />
-      </View>
+              onChange(nextValue);
+            }}
+            placeholder={PLACEHOLDER}
+            placeholderTextColor={PLACEHOLDER_COLOR}
+            editable={isEditable}
+            accessibilityLabel={PLACEHOLDER}
+            onBlur={handleWebBlur}
+            type="date"
+            max={getMaximumBirthDateIso()}
+          />
+          <Ionicons name="calendar-outline" size={18} color={BRAND_COLOR} />
+        </View>
+      </AdminFormFieldShell>
     );
   }
 
   return (
-    <>
+    <AdminFormFieldShell errorMessage={errorMessage}>
       <Pressable
         style={styles.field}
         onPress={openDatePicker}
@@ -268,7 +317,7 @@ export function DateOfBirthField({
           </View>
         </Modal>
       ) : null}
-    </>
+    </AdminFormFieldShell>
   );
 }
 

@@ -9,22 +9,26 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AdminFormField } from '@/components/admin/admin-form-field';
 import { DateOfBirthField } from '@/components/admin/date-of-birth-field';
 import { OccupationSelectField } from '@/components/admin/occupation-select-field';
-import type { AdminOccupation } from '@/constants/admin-occupations';
-import { ADMIN_OCCUPATIONS } from '@/constants/admin-occupations';
+import {
+  type AdminFormErrors,
+  type AdminFormFieldName,
+  getAllFieldsBlurred,
+  hasAdminFormErrors,
+  validateAdminCreateUserForm,
+  validateAdminFormField,
+} from '@/constants/admin-form-validation';
 import {
   BACKGROUND_COLOR,
-  BORDER_COLOR,
   BRAND_COLOR,
   FORM_WIDTH,
   LABEL_COLOR,
-  PLACEHOLDER_COLOR,
 } from '@/constants/auth-ui';
 import {
   AdminError,
@@ -71,47 +75,117 @@ function getTrimmedFormValues(formValues: CreateUserPayload): CreateUserPayload 
   };
 }
 
-function isValidEmail(value: string): boolean {
-  return value.includes('@') && value.includes('.');
-}
-
-function isValidOccupation(value: string): value is AdminOccupation {
-  return ADMIN_OCCUPATIONS.includes(value as AdminOccupation);
-}
-
 export default function AdminCreateUserScreen() {
   const router = useRouter();
   const [formValues, setFormValues] =
     useState<CreateUserPayload>(EMPTY_FORM_VALUES);
+  const [fieldErrors, setFieldErrors] = useState<AdminFormErrors>({});
+  const [blurredFields, setBlurredFields] = useState<
+    Partial<Record<AdminFormFieldName, boolean>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const trimmedFormValues = getTrimmedFormValues(formValues);
-  const hasFilledTextFields =
-    TEXT_FIELDS_BEFORE_DATE_OF_BIRTH.every(
-      (field) => trimmedFormValues[field.name].length > 0,
-    ) && trimmedFormValues.address.length > 0;
-  const hasDateOfBirth = trimmedFormValues.dateOfBirth.length > 0;
-  const hasValidOccupation = isValidOccupation(trimmedFormValues.occupation);
-  const hasValidEmail = isValidEmail(trimmedFormValues.email);
-  const isFormComplete =
-    hasFilledTextFields && hasDateOfBirth && hasValidOccupation && hasValidEmail;
-  const shouldDisableSubmit = !isFormComplete || isSubmitting;
+  function getVisibleFieldError(
+    fieldName: AdminFormFieldName,
+  ): string | undefined {
+    if (!blurredFields[fieldName]) {
+      return undefined;
+    }
 
-  function handleChange(fieldName: TextFieldName, value: string) {
-    setFormValues((currentValues) => ({
-      ...currentValues,
-      [fieldName]: value,
+    return fieldErrors[fieldName];
+  }
+
+  function syncFieldError(
+    fieldName: AdminFormFieldName,
+    values: CreateUserPayload,
+  ) {
+    const fieldError = validateAdminFormField(fieldName, values);
+
+    setFieldErrors((currentErrors) => {
+      const nextErrors = { ...currentErrors };
+
+      if (fieldError) {
+        nextErrors[fieldName] = fieldError;
+      } else {
+        delete nextErrors[fieldName];
+      }
+
+      return nextErrors;
+    });
+  }
+
+  function handleFieldBlur(
+    fieldName: AdminFormFieldName,
+    values: CreateUserPayload = formValues,
+  ) {
+    setBlurredFields((currentBlurredFields) => ({
+      ...currentBlurredFields,
+      [fieldName]: true,
     }));
+    syncFieldError(fieldName, values);
+  }
+
+  function handleTextFieldChange(fieldName: TextFieldName, value: string) {
+    const nextValues = {
+      ...formValues,
+      [fieldName]: value,
+    };
+
+    setFormValues(nextValues);
+
+    if (blurredFields[fieldName]) {
+      syncFieldError(fieldName, nextValues);
+    }
+  }
+
+  function commitFieldValue(
+    fieldName: AdminFormFieldName,
+    value: string,
+  ) {
+    const nextValues = {
+      ...formValues,
+      [fieldName]: value,
+    };
+
+    setFormValues(nextValues);
+    setBlurredFields((currentBlurredFields) => ({
+      ...currentBlurredFields,
+      [fieldName]: true,
+    }));
+    syncFieldError(fieldName, nextValues);
+  }
+
+  function handleDateOfBirthChange(value: string) {
+    const nextValues = {
+      ...formValues,
+      dateOfBirth: value,
+    };
+
+    setFormValues(nextValues);
+
+    if (blurredFields.dateOfBirth) {
+      syncFieldError('dateOfBirth', nextValues);
+    }
   }
 
   async function handleCreateUser() {
-    if (shouldDisableSubmit) {
+    if (isSubmitting) {
+      return;
+    }
+
+    const trimmedFormValues = getTrimmedFormValues(formValues);
+    const validationErrors = validateAdminCreateUserForm(formValues);
+
+    setBlurredFields(getAllFieldsBlurred());
+    setFieldErrors(validationErrors);
+    setErrorMessage(null);
+
+    if (hasAdminFormErrors(validationErrors)) {
       return;
     }
 
     setIsSubmitting(true);
-    setErrorMessage(null);
 
     try {
       await createUser(trimmedFormValues);
@@ -156,56 +230,51 @@ export default function AdminCreateUserScreen() {
 
           <View style={styles.form}>
             {TEXT_FIELDS_BEFORE_DATE_OF_BIRTH.map((field) => (
-              <TextInput
+              <AdminFormField
                 key={field.name}
-                style={styles.input}
                 value={formValues[field.name]}
-                onChangeText={(value) => handleChange(field.name, value)}
+                onChangeText={(value) => handleTextFieldChange(field.name, value)}
+                onBlur={() => handleFieldBlur(field.name)}
                 placeholder={field.placeholder}
-                placeholderTextColor={PLACEHOLDER_COLOR}
                 keyboardType={field.name === 'email' ? 'email-address' : 'default'}
                 autoCapitalize={field.name === 'email' ? 'none' : 'sentences'}
                 autoCorrect={false}
                 editable={!isSubmitting}
                 accessibilityLabel={field.placeholder}
+                errorMessage={getVisibleFieldError(field.name)}
               />
             ))}
 
             <DateOfBirthField
               value={formValues.dateOfBirth}
-              onChange={(value) =>
-                setFormValues((currentValues) => ({
-                  ...currentValues,
-                  dateOfBirth: value,
-                }))
-              }
+              onChange={handleDateOfBirthChange}
+              onCommit={(value) => commitFieldValue('dateOfBirth', value)}
+              onBlur={() => handleFieldBlur('dateOfBirth')}
               isEditable={!isSubmitting}
+              errorMessage={getVisibleFieldError('dateOfBirth')}
             />
 
-            <TextInput
-              style={styles.input}
+            <AdminFormField
               value={formValues.address}
-              onChangeText={(value) => handleChange('address', value)}
+              onChangeText={(value) => handleTextFieldChange('address', value)}
+              onBlur={() => handleFieldBlur('address')}
               placeholder="Enter address"
-              placeholderTextColor={PLACEHOLDER_COLOR}
               autoCorrect={false}
               editable={!isSubmitting}
               accessibilityLabel="Enter address"
+              errorMessage={getVisibleFieldError('address')}
             />
 
             <OccupationSelectField
               value={formValues.occupation}
-              onChange={(value) =>
-                setFormValues((currentValues) => ({
-                  ...currentValues,
-                  occupation: value,
-                }))
-              }
+              onCommit={(value) => commitFieldValue('occupation', value)}
+              onBlur={() => handleFieldBlur('occupation')}
               isEditable={!isSubmitting}
+              errorMessage={getVisibleFieldError('occupation')}
             />
 
             {errorMessage ? (
-              <Text style={styles.errorText} accessibilityRole="alert">
+              <Text style={styles.submitErrorText} accessibilityRole="alert">
                 {errorMessage}
               </Text>
             ) : null}
@@ -214,10 +283,10 @@ export default function AdminCreateUserScreen() {
               <Pressable
                 style={[
                   styles.primaryButton,
-                  shouldDisableSubmit && styles.primaryButtonDisabled,
+                  isSubmitting && styles.primaryButtonDisabled,
                 ]}
                 onPress={handleCreateUser}
-                disabled={shouldDisableSubmit}
+                disabled={isSubmitting}
                 accessibilityRole="button"
                 accessibilityLabel="Create user">
                 {isSubmitting ? (
@@ -282,18 +351,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     gap: 20,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: BORDER_COLOR,
-    borderRadius: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
-    color: LABEL_COLOR,
-    backgroundColor: '#FFFFFF',
-    minHeight: 37,
-  },
-  errorText: {
+  submitErrorText: {
     color: '#B91C1C',
     fontSize: 12,
   },
