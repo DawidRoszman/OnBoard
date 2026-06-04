@@ -12,7 +12,7 @@ export default function LoadingScreen() {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/schedule');
     }, LOADING_DURATION_MS);
 
     return () => clearTimeout(timeoutId);

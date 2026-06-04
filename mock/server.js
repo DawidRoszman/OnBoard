@@ -45,6 +45,83 @@ server.post('/recover', (req, res) => {
   });
 });
 
+server.post('/admin/users', (req, res) => {
+  const {
+    firstName,
+    lastName,
+    email,
+    phone,
+    dateOfBirth,
+    address,
+    occupation,
+  } = req.body ?? {};
+
+  const fields = {
+    firstName,
+    lastName,
+    email,
+    phone,
+    dateOfBirth,
+    address,
+    occupation,
+  };
+
+  const missingField = Object.entries(fields).find(
+    ([, value]) => typeof value !== 'string' || value.trim().length === 0,
+  );
+
+  if (missingField) {
+    res.status(400).json({ error: 'All fields are required.' });
+    return;
+  }
+
+  if (!email.includes('@')) {
+    res.status(400).json({ error: 'A valid email address is required.' });
+    return;
+  }
+
+  const db = router.db;
+  const existingUsers = db.get('createdUsers').value();
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedUsername = `${firstName.trim()}.${lastName.trim()}`
+    .toLowerCase()
+    .replace(/\s+/g, '.');
+  const hasExistingUser = existingUsers.some(
+    (user) =>
+      user.email?.toLowerCase() === normalizedEmail ||
+      user.username === normalizedUsername,
+  );
+
+  if (hasExistingUser) {
+    res
+      .status(409)
+      .json({ error: 'A user with this email or username already exists.' });
+    return;
+  }
+
+  const user = {
+    id: existingUsers.length + 1,
+    firstName: firstName.trim(),
+    lastName: lastName.trim(),
+    email: email.trim(),
+    phone: phone.trim(),
+    dateOfBirth: dateOfBirth.trim(),
+    address: address.trim(),
+    occupation: occupation.trim(),
+    username: normalizedUsername,
+    displayName: `${firstName.trim()} ${lastName.trim()}`,
+    createdAt: new Date().toISOString(),
+  };
+
+  db.get('createdUsers').push(user).write();
+
+  res.status(201).json({
+    user,
+    message:
+      "New user has been created. Activation link has been sent to user's email address.",
+  });
+});
+
 server.post('/reset-password', (req, res) => {
   const { password, confirmPassword } = req.body ?? {};
   const MIN_PASSWORD_LENGTH = 12;
