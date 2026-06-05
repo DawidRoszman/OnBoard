@@ -2,15 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppLoadingState } from '@/components/app-loading-state';
 import { ScheduleTaskCard } from '@/components/schedule/schedule-task-card';
 import { ScheduleTimelineLine } from '@/components/schedule/schedule-timeline-line';
 import {
@@ -82,6 +77,14 @@ export default function ScheduleScreen() {
     router.push(`./schedule-task/${taskId}`);
   }
 
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <AppLoadingState message="Loading schedule" />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.navBar}>
@@ -92,11 +95,7 @@ export default function ScheduleScreen() {
         </View>
       </View>
 
-      {isLoading ? (
-        <View style={styles.centeredState}>
-          <ActivityIndicator color={BRAND_COLOR} size="small" />
-        </View>
-      ) : errorMessage ? (
+      {errorMessage ? (
         <View style={styles.centeredState}>
           <Text style={styles.errorText}>{errorMessage}</Text>
         </View>

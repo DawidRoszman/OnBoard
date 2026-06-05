@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppLoadingState } from '@/components/app-loading-state';
 import {
   BACKGROUND_COLOR,
   BRAND_COLOR,
@@ -109,6 +110,12 @@ export default function ScheduleTaskDetailsScreen() {
   useEffect(() => {
     let isMounted = true;
 
+    setTask(null);
+    setIsLoading(true);
+    setErrorMessage(null);
+    setCompletionError(null);
+    setConfettiBurstId(0);
+
     async function loadTask() {
       if (!taskId) {
         if (isMounted) {
@@ -117,10 +124,12 @@ export default function ScheduleTaskDetailsScreen() {
         return;
       }
 
-      try {
-        const data = await getScheduleTask(taskId);
+      const requestedTaskId = taskId;
 
-        if (isMounted) {
+      try {
+        const data = await getScheduleTask(requestedTaskId);
+
+        if (isMounted && data.id === requestedTaskId) {
           setTask(data);
           setErrorMessage(null);
         }
@@ -159,13 +168,12 @@ export default function ScheduleTaskDetailsScreen() {
     return getTaskDetail(task);
   }, [task]);
 
-  if (isLoading) {
+  const isShowingStaleTask = task !== null && task.id !== taskId;
+
+  if (isLoading || isShowingStaleTask) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScheduleTaskNavBar onBack={navigateToSchedule} />
-        <View style={styles.emptyState}>
-          <ActivityIndicator color={BRAND_COLOR} size="small" />
-        </View>
+        <AppLoadingState message="Loading task" />
       </SafeAreaView>
     );
   }
