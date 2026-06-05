@@ -1,6 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScheduleTaskCard } from '@/components/schedule/schedule-task-card';
@@ -8,6 +16,7 @@ import { ScheduleTimelineLine } from '@/components/schedule/schedule-timeline-li
 import {
   BACKGROUND_COLOR,
   BRAND_COLOR,
+  LABEL_COLOR,
   MESSAGE_COLOR,
 } from '@/constants/auth-ui';
 import {
@@ -15,13 +24,59 @@ import {
   SCHEDULE_TIMELINE_X,
 } from '@/constants/schedule-layout';
 import {
-  SCHEDULE_GREETING,
-  SCHEDULE_TIMELINE_ITEMS,
+  getSchedule,
+  ScheduleError,
+  type Schedule,
   type ScheduleTimelineItem,
-} from '@/constants/schedule-data';
+} from '@/services/schedule-service';
 
 export default function ScheduleScreen() {
   const router = useRouter();
+  const [schedule, setSchedule] = useState<Schedule | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const hasLoadedScheduleRef = useRef(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+      const shouldShowLoading = !hasLoadedScheduleRef.current;
+
+      async function loadSchedule() {
+        if (shouldShowLoading) {
+          setIsLoading(true);
+        }
+
+        try {
+          const data = await getSchedule();
+
+          if (isMounted) {
+            setSchedule(data);
+            setErrorMessage(null);
+            hasLoadedScheduleRef.current = true;
+          }
+        } catch (error) {
+          if (isMounted) {
+            setErrorMessage(
+              error instanceof ScheduleError
+                ? error.message
+                : 'Failed to load schedule. Please try again.',
+            );
+          }
+        } finally {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        }
+      }
+
+      loadSchedule();
+
+      return () => {
+        isMounted = false;
+      };
+    }, []),
+  );
 
   function openTask(taskId: string) {
     router.push(`./schedule-task/${taskId}`);
@@ -39,25 +94,35 @@ export default function ScheduleScreen() {
         </View>
       </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}>
-        <Text style={styles.greetingHeading}>{SCHEDULE_GREETING}</Text>
+      {isLoading ? (
+        <View style={styles.centeredState}>
+          <ActivityIndicator color={BRAND_COLOR} size="small" />
+        </View>
+      ) : errorMessage ? (
+        <View style={styles.centeredState}>
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        </View>
+      ) : schedule ? (
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+          <Text style={styles.greetingHeading}>{schedule.greeting}</Text>
 
-        <ScheduleTimelineLine>
-          {SCHEDULE_TIMELINE_ITEMS.map((item, index) => (
-            <ScheduleTimelineEntry
-              key={item.type === 'time' ? item.id : item.task.id}
-              item={item}
-              isLast={index === SCHEDULE_TIMELINE_ITEMS.length - 1}
-              onTaskPress={openTask}
-            />
-          ))}
-        </ScheduleTimelineLine>
+          <ScheduleTimelineLine>
+            {schedule.timelineItems.map((item, index) => (
+              <ScheduleTimelineEntry
+                key={item.type === 'time' ? item.id : item.task.id}
+                item={item}
+                isLast={index === schedule.timelineItems.length - 1}
+                onTaskPress={openTask}
+              />
+            ))}
+          </ScheduleTimelineLine>
 
-        <Text style={styles.footerText}>See you next time!</Text>
-      </ScrollView>
+          <Text style={styles.footerText}>{schedule.footerText}</Text>
+        </ScrollView>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -117,6 +182,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#1F2024',
+    textAlign: 'center',
+  },
+  centeredState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  errorText: {
+    color: LABEL_COLOR,
+    fontSize: 16,
     textAlign: 'center',
   },
   scroll: {

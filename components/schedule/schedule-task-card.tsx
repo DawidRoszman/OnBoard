@@ -6,13 +6,13 @@ import {
   BRAND_COLOR,
   LABEL_COLOR,
 } from '@/constants/auth-ui';
-import type { ScheduleTask, ScheduleTaskStatus } from '@/constants/schedule-data';
 import { SCHEDULE_TIMELINE_X } from '@/constants/schedule-layout';
+import type { ScheduleTask, ScheduleTaskStatus } from '@/services/schedule-service';
 
 export const SCHEDULE_TAG_WIDTH = 68;
 const TAG_OVERLAP = 18;
 const TAG_DOT_SIZE = 12;
-const STATUS_CHIP_WIDTH = 72;
+const STATUS_CHIP_WIDTH = 78;
 const STATUS_CHIP_LEFT_OFFSET = 4;
 
 const STATUS_STYLES: Record<

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   Easing,
   Pressable,
@@ -18,10 +19,12 @@ import {
   MESSAGE_COLOR,
 } from '@/constants/auth-ui';
 import {
-  getScheduleTaskById,
+  completeScheduleTask,
+  getScheduleTask,
+  ScheduleError,
   type ScheduleTask,
   type ScheduleTaskStatus,
-} from '@/constants/schedule-data';
+} from '@/services/schedule-service';
 
 type DetailStatus = Extract<
   ScheduleTaskStatus,
@@ -96,24 +99,92 @@ const CONFETTI_PIECES = [
 export default function ScheduleTaskDetailsScreen() {
   const router = useRouter();
   const { taskId } = useLocalSearchParams<{ taskId?: string }>();
-  const task = taskId ? getScheduleTaskById(taskId) : undefined;
-  const [completedStatus, setCompletedStatus] = useState<
-    Extract<ScheduleTaskStatus, 'done' | 'late'> | null
-  >(null);
+  const [task, setTask] = useState<ScheduleTask | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [completionError, setCompletionError] = useState<string | null>(null);
   const [confettiBurstId, setConfettiBurstId] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadTask() {
+      if (!taskId) {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const data = await getScheduleTask(taskId);
+
+        if (isMounted) {
+          setTask(data);
+          setErrorMessage(null);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setTask(null);
+          setErrorMessage(
+            error instanceof ScheduleError
+              ? error.message
+              : 'Failed to load task. Please try again.',
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadTask();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [taskId]);
+
+  function navigateToSchedule() {
+    router.replace('/schedule');
+  }
 
   const detail = useMemo(() => {
     if (!task) {
       return undefined;
     }
 
-    return getTaskDetail(task, completedStatus);
-  }, [completedStatus, task]);
+    return getTaskDetail(task);
+  }, [task]);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScheduleTaskNavBar onBack={navigateToSchedule} />
+        <View style={styles.emptyState}>
+          <ActivityIndicator color={BRAND_COLOR} size="small" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScheduleTaskNavBar onBack={navigateToSchedule} />
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>{errorMessage}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!task || !detail) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScheduleTaskNavBar onBack={() => router.back()} />
+        <ScheduleTaskNavBar onBack={navigateToSchedule} />
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>Task not found.</Text>
         </View>
@@ -123,18 +194,32 @@ export default function ScheduleTaskDetailsScreen() {
 
   const statusStyle = STATUS_STYLES[detail.status];
 
-  function handleMarkAsCompleted() {
-    if (statusStyle.isCompleted || !task?.completedStatus) {
+  async function handleMarkAsCompleted() {
+    if (statusStyle.isCompleted || isCompleting || !task) {
       return;
     }
 
-    setCompletedStatus(task.completedStatus);
-    setConfettiBurstId((currentBurstId) => currentBurstId + 1);
+    setIsCompleting(true);
+    setCompletionError(null);
+
+    try {
+      const updatedTask = await completeScheduleTask(task.id);
+      setTask(updatedTask);
+      setConfettiBurstId((currentBurstId) => currentBurstId + 1);
+    } catch (error) {
+      setCompletionError(
+        error instanceof ScheduleError
+          ? error.message
+          : 'Failed to complete task. Please try again.',
+      );
+    } finally {
+      setIsCompleting(false);
+    }
   }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScheduleTaskNavBar onBack={() => router.back()} />
+      <ScheduleTaskNavBar onBack={navigateToSchedule} />
 
       <View style={styles.content}>
         <View style={styles.summaryRow}>
@@ -172,15 +257,25 @@ export default function ScheduleTaskDetailsScreen() {
             { backgroundColor: statusStyle.buttonBackground },
           ]}
           onPress={handleMarkAsCompleted}
-          disabled={statusStyle.isCompleted}
+          disabled={statusStyle.isCompleted || isCompleting}
           accessibilityRole="button"
           accessibilityLabel={
             statusStyle.isCompleted ? 'Marked as completed' : 'Mark as completed'
           }>
-          <Text style={styles.completeButtonText}>
-            {statusStyle.isCompleted ? 'Marked as completed' : 'Mark as completed'}
-          </Text>
+          {isCompleting ? (
+            <ActivityIndicator color="#FEFEFF" size="small" />
+          ) : (
+            <Text style={styles.completeButtonText}>
+              {statusStyle.isCompleted
+                ? 'Marked as completed'
+                : 'Mark as completed'}
+            </Text>
+          )}
         </Pressable>
+
+        {completionError ? (
+          <Text style={styles.completionError}>{completionError}</Text>
+        ) : null}
 
         {detail.message ? (
           <Text style={[styles.completedMessage, { color: statusStyle.color }]}>
@@ -303,34 +398,29 @@ function ScheduleTaskMetaRow({
   );
 }
 
-function getTaskDetail(
-  task: ScheduleTask,
-  completedStatus: Extract<ScheduleTaskStatus, 'done' | 'late'> | null,
-): {
+function getTaskDetail(task: ScheduleTask): {
   status: DetailStatus;
   secondaryLabel: string;
   completedTime?: string;
   message?: string;
 } {
-  const status = completedStatus ?? task.status;
-
-  if (status === 'todo') {
+  if (task.status === 'todo') {
     return {
-      status,
+      status: task.status,
       secondaryLabel: 'Up next',
     };
   }
 
-  if (status === 'overdue') {
+  if (task.status === 'overdue') {
     return {
-      status,
-      secondaryLabel: "You haven’t completed this task yet!",
+      status: task.status,
+      secondaryLabel: "You haven't completed this task yet!",
     };
   }
 
-  if (status === 'late') {
+  if (task.status === 'late') {
     return {
-      status,
+      status: task.status,
       secondaryLabel: 'Completed at',
       completedTime: task.completedTime ?? '09:41',
       message: task.completedMessage ?? 'Done at last!',
@@ -446,6 +536,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 20,
     fontWeight: '500',
+  },
+  completionError: {
+    textAlign: 'center',
+    color: LABEL_COLOR,
+    fontSize: 16,
   },
   emptyState: {
     flex: 1,

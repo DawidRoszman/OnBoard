@@ -122,6 +122,107 @@ server.post('/admin/users', (req, res) => {
   });
 });
 
+function getScheduleData(db) {
+  return db.get('schedule').value();
+}
+
+function findScheduleTask(db, taskId) {
+  const schedule = getScheduleData(db);
+
+  if (!schedule) {
+    return null;
+  }
+
+  const task = schedule.tasks.find((entry) => entry.id === taskId);
+
+  if (!task) {
+    return null;
+  }
+
+  return task;
+}
+
+function isCompletedTaskStatus(status) {
+  return status === 'done' || status === 'late';
+}
+
+function getCurrentTimeLabel() {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+
+  return `${hours}:${minutes}`;
+}
+
+function completeScheduleTask(db, taskId) {
+  const taskEntry = db.get('schedule').get('tasks').find({ id: taskId });
+
+  if (!taskEntry.value()) {
+    return { statusCode: 404, error: 'Task not found.' };
+  }
+
+  const task = taskEntry.value();
+
+  if (isCompletedTaskStatus(task.status)) {
+    return { statusCode: 200, task };
+  }
+
+  const completedStatus = task.completedStatus;
+
+  if (!isCompletedTaskStatus(completedStatus)) {
+    return {
+      statusCode: 400,
+      error: 'Task cannot be completed.',
+    };
+  }
+
+  const updatedTask = {
+    ...task,
+    status: completedStatus,
+    completedTime: getCurrentTimeLabel(),
+  };
+
+  taskEntry.assign(updatedTask).write();
+
+  return { statusCode: 200, task: updatedTask };
+}
+
+server.get('/schedule', (req, res) => {
+  const db = router.db;
+  const schedule = getScheduleData(db);
+
+  if (!schedule) {
+    res.status(404).json({ error: 'Schedule not found.' });
+    return;
+  }
+
+  res.json(schedule);
+});
+
+server.get('/schedule/tasks/:taskId', (req, res) => {
+  const db = router.db;
+  const task = findScheduleTask(db, req.params.taskId);
+
+  if (!task) {
+    res.status(404).json({ error: 'Task not found.' });
+    return;
+  }
+
+  res.json({ task });
+});
+
+server.patch('/schedule/tasks/:taskId/complete', (req, res) => {
+  const db = router.db;
+  const result = completeScheduleTask(db, req.params.taskId);
+
+  if (result.error) {
+    res.status(result.statusCode).json({ error: result.error });
+    return;
+  }
+
+  res.status(result.statusCode).json({ task: result.task });
+});
+
 server.post('/reset-password', (req, res) => {
   const { password, confirmPassword } = req.body ?? {};
   const MIN_PASSWORD_LENGTH = 12;

@@ -20,6 +20,121 @@
       "username": "jan.kowalski",
       "displayName": "Jan Kowalski",
       "createdAt": "2026-06-04T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "firstName": "Dawid",
+      "lastName": "Roszman",
+      "email": "dawid.roszman@exploreit.io",
+      "phone": "123123123",
+      "dateOfBirth": "01.01.1990",
+      "address": "Street 1",
+      "occupation": "Software Engineer",
+      "username": "dawid.roszman",
+      "displayName": "Dawid Roszman",
+      "createdAt": "2026-06-04T20:52:24.189Z"
     }
-  ]
+  ],
+  "schedule": {
+    "greeting": "Good morning!",
+    "footerText": "See you next time!",
+    "tasks": [
+      {
+        "id": "1",
+        "time": "09:05",
+        "dueTime": "09:15",
+        "title": "Check e-mail",
+        "description": "Start your day with seeing what's going on",
+        "detailDescription": "Start by scanning your inbox for production alerts, deployment notifications, incident reports, code review requests, and blocked dependencies. Prioritize anything affecting systems, users, or team delivery. Flag actionable items and ignore low-priority noise until core issues are handled.",
+        "status": "done",
+        "completedStatus": "done",
+        "completedMessage": "Well done on time! 🎉",
+        "completedTime": "13:31"
+      },
+      {
+        "id": "2",
+        "time": "09:05",
+        "dueTime": "09:15",
+        "title": "Check e-mail",
+        "description": "Start your day with seeing what's going on",
+        "detailDescription": "Start by scanning your inbox for production alerts, deployment notifications, incident reports, code review requests, and blocked dependencies. Prioritize anything affecting systems, users, or team delivery. Flag actionable items and ignore low-priority noise until core issues are handled.",
+        "status": "late",
+        "completedStatus": "late",
+        "completedMessage": "Done at last!",
+        "completedTime": "13:32"
+      },
+      {
+        "id": "3",
+        "time": "09:20",
+        "dueTime": "09:15",
+        "title": "Check e-mail",
+        "description": "Start your day with seeing what's going on",
+        "detailDescription": "Start by scanning your inbox for production alerts, deployment notifications, incident reports, code review requests, and blocked dependencies. Prioritize anything affecting systems, users, or team delivery. Flag actionable items and ignore low-priority noise until core issues are handled.",
+        "status": "late",
+        "completedStatus": "late",
+        "completedMessage": "Done at last!",
+        "completedTime": "13:32"
+      },
+      {
+        "id": "4",
+        "time": "10:15",
+        "dueTime": "10:30",
+        "title": "Check e-mail",
+        "description": "Start your day with seeing what's going on",
+        "detailDescription": "Start by scanning your inbox for production alerts, deployment notifications, incident reports, code review requests, and blocked dependencies. Prioritize anything affecting systems, users, or team delivery. Flag actionable items and ignore low-priority noise until core issues are handled.",
+        "status": "done",
+        "completedStatus": "done",
+        "completedMessage": "Well done on time! 🎉",
+        "completedTime": "13:32"
+      }
+    ],
+    "timelineItems": [
+      {
+        "type": "time",
+        "id": "time-09-05",
+        "time": "09:05"
+      },
+      {
+        "type": "task",
+        "taskId": "1"
+      },
+      {
+        "type": "task",
+        "taskId": "2"
+      },
+      {
+        "type": "time",
+        "id": "time-09-15",
+        "time": "09:15"
+      },
+      {
+        "type": "time",
+        "id": "time-09-20",
+        "time": "09:20"
+      },
+      {
+        "type": "task",
+        "taskId": "3"
+      },
+      {
+        "type": "time",
+        "id": "time-09-30",
+        "time": "09:30"
+      },
+      {
+        "type": "time",
+        "id": "time-10-15",
+        "time": "10:15"
+      },
+      {
+        "type": "task",
+        "taskId": "4"
+      },
+      {
+        "type": "time",
+        "id": "time-10-30",
+        "time": "10:30"
+      }
+    ]
+  }
 }
