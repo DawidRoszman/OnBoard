@@ -1,4 +1,4 @@
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -6,14 +6,19 @@ import {
   BACKGROUND_COLOR,
   BRAND_COLOR,
   FORM_WIDTH,
+  LABEL_COLOR,
   MESSAGE_COLOR,
 } from '@/constants/auth-ui';
 
 export default function AdminCreateUserSuccessScreen() {
   const router = useRouter();
+  const { username, temporaryPassword } = useLocalSearchParams<{
+    username?: string;
+    temporaryPassword?: string;
+  }>();
 
   function handleGoBack() {
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/schedule');
   }
 
   return (
@@ -26,8 +31,23 @@ export default function AdminCreateUserSuccessScreen() {
         </View>
 
         <Text style={styles.message}>
-          {`New user has been created. Activation link has been sent to user's email address.`}
+          New user has been created. Share these credentials with the user for
+          their first login.
         </Text>
+
+        {username ? (
+          <View style={styles.credentialsBlock}>
+            <Text style={styles.credentialLabel}>Username</Text>
+            <Text style={styles.credentialValue}>{username}</Text>
+          </View>
+        ) : null}
+
+        {temporaryPassword ? (
+          <View style={styles.credentialsBlock}>
+            <Text style={styles.credentialLabel}>Temporary password</Text>
+            <Text style={styles.credentialValue}>{temporaryPassword}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.actionsRow}>
           <Pressable
@@ -80,6 +100,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 20,
+    marginBottom: 20,
+  },
+  credentialsBlock: {
+    width: FORM_WIDTH,
+    alignSelf: 'center',
+    marginBottom: 12,
+    gap: 4,
+  },
+  credentialLabel: {
+    color: LABEL_COLOR,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  credentialValue: {
+    color: MESSAGE_COLOR,
+    fontSize: 16,
+    fontWeight: '600',
   },
   actionsRow: {
     width: FORM_WIDTH,

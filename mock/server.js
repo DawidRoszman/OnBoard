@@ -3,6 +3,9 @@ const path = require('path');
 const jsonServer = require('json-server');
 
 const PORT = process.env.MOCK_API_PORT || 3004;
+const MIN_PASSWORD_LENGTH = 12;
+const TEMPORARY_PASSWORD_PREFIX = 'TempPass';
+
 const server = jsonServer.create();
 const router = jsonServer.router(path.join(__dirname, 'db.json'));
 const middlewares = jsonServer.defaults();
@@ -10,7 +13,145 @@ const middlewares = jsonServer.defaults();
 server.use(middlewares);
 server.use(jsonServer.bodyParser);
 
-// Demo credentials (see mock/db.json): user.name / password1234 (12+ chars for client validation)
+function buildUsername(firstName, lastName) {
+  return `${firstName.trim()}.${lastName.trim()}`
+    .toLowerCase()
+    .replace(/\s+/g, '.');
+}
+
+function generateTemporaryPassword() {
+  const suffix = Math.random().toString(36).slice(2, 8);
+  return `${TEMPORARY_PASSWORD_PREFIX}${suffix}`;
+}
+
+function toPublicUser(user) {
+  const {
+    password: _password,
+    ...publicUser
+  } = user;
+
+  return {
+    id: publicUser.id,
+    username: publicUser.username,
+    displayName: publicUser.displayName,
+    firstName: publicUser.firstName,
+    lastName: publicUser.lastName,
+    email: publicUser.email,
+    phone: publicUser.phone,
+    dateOfBirth: publicUser.dateOfBirth,
+    address: publicUser.address,
+    occupation: publicUser.occupation,
+    isAdmin: Boolean(publicUser.isAdmin),
+    mustSetupPassword: Boolean(publicUser.mustSetupPassword),
+    createdAt: publicUser.createdAt,
+  };
+}
+
+function getNextUserId(db) {
+  const users = db.get('users').value();
+  const maxId = users.reduce((currentMax, user) => Math.max(currentMax, user.id), 0);
+
+  return maxId + 1;
+}
+
+function createEmptySchedule(userId) {
+  return {
+    userId,
+    greeting: 'Good morning!',
+    footerText: 'See you next time!',
+    tasks: [],
+    timelineItems: [],
+  };
+}
+
+function getScheduleByUserId(db, userId) {
+  const parsedUserId = Number(userId);
+
+  if (!Number.isInteger(parsedUserId)) {
+    return null;
+  }
+
+  return db.get('schedules').find({ userId: parsedUserId }).value() ?? null;
+}
+
+function findScheduleTask(db, userId, taskId) {
+  const schedule = getScheduleByUserId(db, userId);
+
+  if (!schedule) {
+    return null;
+  }
+
+  return schedule.tasks.find((entry) => entry.id === taskId) ?? null;
+}
+
+function isCompletedTaskStatus(status) {
+  return status === 'done' || status === 'late';
+}
+
+function getCurrentTimeLabel() {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+
+  return `${hours}:${minutes}`;
+}
+
+function completeScheduleTask(db, userId, taskId) {
+  const scheduleEntry = db
+    .get('schedules')
+    .find({ userId: Number(userId) });
+
+  if (!scheduleEntry.value()) {
+    return { statusCode: 404, error: 'Schedule not found.' };
+  }
+
+  const taskEntry = scheduleEntry.get('tasks').find({ id: taskId });
+
+  if (!taskEntry.value()) {
+    return { statusCode: 404, error: 'Task not found.' };
+  }
+
+  const task = taskEntry.value();
+
+  if (isCompletedTaskStatus(task.status)) {
+    return { statusCode: 200, task };
+  }
+
+  const completedStatus = task.completedStatus;
+
+  if (!isCompletedTaskStatus(completedStatus)) {
+    return {
+      statusCode: 400,
+      error: 'Task cannot be completed.',
+    };
+  }
+
+  const updatedTask = {
+    ...task,
+    status: completedStatus,
+    completedTime: getCurrentTimeLabel(),
+  };
+
+  taskEntry.assign(updatedTask).write();
+
+  return { statusCode: 200, task: updatedTask };
+}
+
+function parseUserIdQuery(userId) {
+  if (!userId) {
+    return null;
+  }
+
+  const parsedUserId = Number(userId);
+
+  if (!Number.isInteger(parsedUserId)) {
+    return null;
+  }
+
+  return parsedUserId;
+}
+
+// Demo credentials (see mock/db.json): user.name / password1234
 server.post('/login', (req, res) => {
   const { username, password } = req.body ?? {};
 
@@ -27,8 +168,66 @@ server.post('/login', (req, res) => {
     return;
   }
 
-  const { password: _password, ...userWithoutPassword } = user;
-  res.json({ user: userWithoutPassword });
+  res.json({ user: toPublicUser(user) });
+});
+
+server.post('/setup-password', (req, res) => {
+  const { username, temporaryPassword, password, confirmPassword } = req.body ?? {};
+
+  if (!username || !temporaryPassword || !password || !confirmPassword) {
+    res
+      .status(400)
+      .json({ error: 'Username, temporary password, and new password are required.' });
+    return;
+  }
+
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    res.status(400).json({
+      error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
+    });
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    res.status(400).json({ error: 'Passwords must match.' });
+    return;
+  }
+
+  const db = router.db;
+  const userEntry = db.get('users').find({ username });
+
+  if (!userEntry.value()) {
+    res.status(404).json({ error: 'User not found.' });
+    return;
+  }
+
+  const user = userEntry.value();
+
+  if (!user.mustSetupPassword) {
+    res.status(400).json({ error: 'Password setup is not required for this user.' });
+    return;
+  }
+
+  if (user.password !== temporaryPassword) {
+    res.status(401).json({ error: 'Invalid temporary password.' });
+    return;
+  }
+
+  userEntry
+    .assign({
+      password,
+      mustSetupPassword: false,
+    })
+    .write();
+
+  res.json({
+    user: toPublicUser({
+      ...user,
+      password,
+      mustSetupPassword: false,
+    }),
+    message: 'Password has been set successfully.',
+  });
 });
 
 server.post('/recover', (req, res) => {
@@ -81,15 +280,13 @@ server.post('/admin/users', (req, res) => {
   }
 
   const db = router.db;
-  const existingUsers = db.get('createdUsers').value();
+  const existingUsers = db.get('users').value();
   const normalizedEmail = email.trim().toLowerCase();
-  const normalizedUsername = `${firstName.trim()}.${lastName.trim()}`
-    .toLowerCase()
-    .replace(/\s+/g, '.');
+  const normalizedUsername = buildUsername(firstName, lastName);
   const hasExistingUser = existingUsers.some(
-    (user) =>
-      user.email?.toLowerCase() === normalizedEmail ||
-      user.username === normalizedUsername,
+    (entry) =>
+      entry.email?.toLowerCase() === normalizedEmail ||
+      entry.username === normalizedUsername,
   );
 
   if (hasExistingUser) {
@@ -99,8 +296,10 @@ server.post('/admin/users', (req, res) => {
     return;
   }
 
+  const temporaryPassword = generateTemporaryPassword();
+  const userId = getNextUserId(db);
   const user = {
-    id: existingUsers.length + 1,
+    id: userId,
     firstName: firstName.trim(),
     lastName: lastName.trim(),
     email: email.trim(),
@@ -110,98 +309,53 @@ server.post('/admin/users', (req, res) => {
     occupation: occupation.trim(),
     username: normalizedUsername,
     displayName: `${firstName.trim()} ${lastName.trim()}`,
+    password: temporaryPassword,
+    isAdmin: false,
+    mustSetupPassword: true,
     createdAt: new Date().toISOString(),
   };
 
-  db.get('createdUsers').push(user).write();
+  db.get('users').push(user).write();
+  db.get('schedules').push(createEmptySchedule(userId)).write();
 
   res.status(201).json({
-    user,
+    user: toPublicUser(user),
+    temporaryPassword,
     message:
-      "New user has been created. Activation link has been sent to user's email address.",
+      "New user has been created. Share the username and temporary password with the user.",
   });
 });
 
-function getScheduleData(db) {
-  return db.get('schedule').value();
-}
-
-function findScheduleTask(db, taskId) {
-  const schedule = getScheduleData(db);
-
-  if (!schedule) {
-    return null;
-  }
-
-  const task = schedule.tasks.find((entry) => entry.id === taskId);
-
-  if (!task) {
-    return null;
-  }
-
-  return task;
-}
-
-function isCompletedTaskStatus(status) {
-  return status === 'done' || status === 'late';
-}
-
-function getCurrentTimeLabel() {
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-
-  return `${hours}:${minutes}`;
-}
-
-function completeScheduleTask(db, taskId) {
-  const taskEntry = db.get('schedule').get('tasks').find({ id: taskId });
-
-  if (!taskEntry.value()) {
-    return { statusCode: 404, error: 'Task not found.' };
-  }
-
-  const task = taskEntry.value();
-
-  if (isCompletedTaskStatus(task.status)) {
-    return { statusCode: 200, task };
-  }
-
-  const completedStatus = task.completedStatus;
-
-  if (!isCompletedTaskStatus(completedStatus)) {
-    return {
-      statusCode: 400,
-      error: 'Task cannot be completed.',
-    };
-  }
-
-  const updatedTask = {
-    ...task,
-    status: completedStatus,
-    completedTime: getCurrentTimeLabel(),
-  };
-
-  taskEntry.assign(updatedTask).write();
-
-  return { statusCode: 200, task: updatedTask };
-}
-
 server.get('/schedule', (req, res) => {
   const db = router.db;
-  const schedule = getScheduleData(db);
+  const userId = parseUserIdQuery(req.query.userId);
+
+  if (userId === null) {
+    res.status(400).json({ error: 'A valid userId query parameter is required.' });
+    return;
+  }
+
+  const schedule = getScheduleByUserId(db, userId);
 
   if (!schedule) {
     res.status(404).json({ error: 'Schedule not found.' });
     return;
   }
 
-  res.json(schedule);
+  const { userId: _userId, ...scheduleResponse } = schedule;
+  res.json(scheduleResponse);
 });
 
 server.get('/schedule/tasks/:taskId', (req, res) => {
   const db = router.db;
-  const task = findScheduleTask(db, req.params.taskId);
+  const userId = parseUserIdQuery(req.query.userId);
+
+  if (userId === null) {
+    res.status(400).json({ error: 'A valid userId query parameter is required.' });
+    return;
+  }
+
+  const task = findScheduleTask(db, userId, req.params.taskId);
 
   if (!task) {
     res.status(404).json({ error: 'Task not found.' });
@@ -213,7 +367,14 @@ server.get('/schedule/tasks/:taskId', (req, res) => {
 
 server.patch('/schedule/tasks/:taskId/complete', (req, res) => {
   const db = router.db;
-  const result = completeScheduleTask(db, req.params.taskId);
+  const userId = parseUserIdQuery(req.query.userId);
+
+  if (userId === null) {
+    res.status(400).json({ error: 'A valid userId query parameter is required.' });
+    return;
+  }
+
+  const result = completeScheduleTask(db, userId, req.params.taskId);
 
   if (result.error) {
     res.status(result.statusCode).json({ error: result.error });
@@ -225,7 +386,6 @@ server.patch('/schedule/tasks/:taskId/complete', (req, res) => {
 
 server.post('/reset-password', (req, res) => {
   const { password, confirmPassword } = req.body ?? {};
-  const MIN_PASSWORD_LENGTH = 12;
 
   if (!password || !confirmPassword) {
     res.status(400).json({ error: 'Password and confirmation are required.' });
@@ -288,12 +448,8 @@ httpServer.on('error', async (error) => {
     console.error(
       `Port ${PORT} is in use by an outdated mock API (POST /recover returned ${recoverStatus ?? 'no response'}).`,
     );
-    console.error(
-      `Restart it with: npm run mock-api`,
-    );
-    console.error(
-      `Or stop the process manually: lsof -ti :${PORT} | xargs kill`,
-    );
+    console.error(`Restart it with: npm run mock-api`);
+    console.error(`Or stop the process manually: lsof -ti :${PORT} | xargs kill`);
     process.exit(1);
   }
 

@@ -25,6 +25,10 @@ import {
   PLACEHOLDER_COLOR,
 } from '@/constants/auth-ui';
 import { AuthError, login } from '@/services/auth-service';
+import {
+  setAuthUser,
+  setPendingTemporaryPassword,
+} from '@/services/auth-session';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -49,7 +53,15 @@ export default function LoginScreen() {
     setErrorMessage(null);
 
     try {
-      await login(username.trim(), password);
+      const result = await login(username.trim(), password);
+      setAuthUser(result.user);
+
+      if (result.user.mustSetupPassword) {
+        setPendingTemporaryPassword(password);
+        router.replace('/setup-password');
+        return;
+      }
+
       router.replace('/loading');
     } catch (error) {
       if (error instanceof AuthError) {

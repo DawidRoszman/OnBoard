@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/config/api';
+import { getAuthUser } from '@/services/auth-session';
 
 export type ScheduleTaskStatus = 'done' | 'late' | 'overdue' | 'todo';
 
@@ -65,8 +66,24 @@ export class ScheduleError extends Error {
   }
 }
 
+function getScheduleUserId(): number {
+  const user = getAuthUser();
+
+  if (!user) {
+    throw new ScheduleError('You must be logged in to load the schedule.', 401);
+  }
+
+  return user.id;
+}
+
+function buildScheduleUrl(path: string): string {
+  const userId = getScheduleUserId();
+
+  return `${API_BASE_URL}${path}?userId=${userId}`;
+}
+
 export async function getSchedule(): Promise<Schedule> {
-  const response = await fetch(`${API_BASE_URL}/schedule`);
+  const response = await fetch(buildScheduleUrl('/schedule'));
   const body = await response.json().catch(() => ({}));
 
   if (!response.ok) {
@@ -78,7 +95,7 @@ export async function getSchedule(): Promise<Schedule> {
 }
 
 export async function getScheduleTask(taskId: string): Promise<ScheduleTask> {
-  const response = await fetch(`${API_BASE_URL}/schedule/tasks/${taskId}`);
+  const response = await fetch(buildScheduleUrl(`/schedule/tasks/${taskId}`));
   const body = await response.json().catch(() => ({}));
 
   if (!response.ok) {
@@ -93,7 +110,7 @@ export async function completeScheduleTask(
   taskId: string,
 ): Promise<ScheduleTask> {
   const response = await fetch(
-    `${API_BASE_URL}/schedule/tasks/${taskId}/complete`,
+    buildScheduleUrl(`/schedule/tasks/${taskId}/complete`),
     {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },

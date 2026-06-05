@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppLoadingState } from '@/components/app-loading-state';
+import { ScheduleMenuButton } from '@/components/schedule/schedule-menu-button';
 import {
   BACKGROUND_COLOR,
   BRAND_COLOR,
@@ -376,7 +377,7 @@ function ScheduleTaskNavBar({ onBack }: { onBack: () => void }) {
       </Pressable>
       <Text style={styles.navTitle}>Admin Panel</Text>
       <View style={[styles.navSide, styles.navSideRight]}>
-        <Ionicons name="menu" size={20} color={BRAND_COLOR} />
+        <ScheduleMenuButton />
       </View>
     </View>
   );

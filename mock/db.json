@@ -4,194 +4,329 @@
       "id": 1,
       "username": "user.name",
       "password": "password1234",
-      "displayName": "Demo User"
-    }
-  ],
-  "createdUsers": [
-    {
-      "id": 1,
-      "firstName": "Jan",
-      "lastName": "Kowalski",
-      "email": "jan@example.com",
-      "phone": "123",
-      "dateOfBirth": "01.01.1990",
-      "address": "Street 1",
-      "occupation": "Driver",
-      "username": "jan.kowalski",
-      "displayName": "Jan Kowalski",
-      "createdAt": "2026-06-04T00:00:00.000Z"
+      "displayName": "Demo User",
+      "firstName": "Demo",
+      "lastName": "User",
+      "email": "demo@example.com",
+      "phone": "",
+      "dateOfBirth": "",
+      "address": "",
+      "occupation": "Software Engineer",
+      "isAdmin": true,
+      "mustSetupPassword": false,
+      "createdAt": "2026-06-01T00:00:00.000Z"
     },
     {
       "id": 2,
-      "firstName": "Dawid",
-      "lastName": "Roszman",
-      "email": "dawid.roszman@exploreit.io",
-      "phone": "123123123",
+      "firstName": "Anna",
+      "lastName": "Nowak",
+      "email": "anna@example.com",
+      "phone": "123456789",
       "dateOfBirth": "01.01.1990",
       "address": "Street 1",
-      "occupation": "Software Engineer",
+      "occupation": "Software Developer",
+      "username": "anna.nowak",
+      "displayName": "Anna Nowak",
+      "password": "newpassword1234",
+      "isAdmin": false,
+      "mustSetupPassword": false,
+      "createdAt": "2026-06-05T11:50:49.301Z"
+    },
+    {
+      "id": 3,
+      "firstName": "Piotr",
+      "lastName": "Kowalski",
+      "email": "piotr@example.com",
+      "phone": "987654321",
+      "dateOfBirth": "15.03.1985",
+      "address": "Main St 5",
+      "occupation": "Developer",
+      "username": "piotr.kowalski",
+      "displayName": "Piotr Kowalski",
+      "password": "securepass1234",
+      "isAdmin": false,
+      "mustSetupPassword": false,
+      "createdAt": "2026-06-05T11:51:54.936Z"
+    },
+    {
+      "id": 4,
+      "firstName": "Dawid",
+      "lastName": "Roszman",
+      "email": "dawidroszman@mail.com",
+      "phone": "123123123",
+      "dateOfBirth": "01.01.1990",
+      "address": "Address",
+      "occupation": "Full-stack Developer",
       "username": "dawid.roszman",
       "displayName": "Dawid Roszman",
-      "createdAt": "2026-06-04T20:52:24.189Z"
+      "password": "secretpass1234",
+      "isAdmin": false,
+      "mustSetupPassword": false,
+      "createdAt": "2026-06-05T11:55:59.775Z"
     }
   ],
-  "schedule": {
-    "greeting": "Good morning!",
-    "footerText": "See you next time!",
-    "tasks": [
-      {
-        "id": "1",
-        "time": "08:30",
-        "dueTime": "08:45",
-        "title": "Check e-mail",
-        "description": "Triage overnight alerts and team updates",
-        "detailDescription": "Scan your inbox for production alerts, failed CI runs, deployment notifications, and code review requests. Reply to blockers, flag incidents for the daily, and archive low-priority threads so you start the day with a clear picture of what needs attention.",
-        "status": "done",
-        "completedStatus": "done",
-        "completedMessage": "Well done on time! 🎉",
-        "completedTime": "08:38"
-      },
-      {
-        "id": "2",
-        "time": "09:00",
-        "dueTime": "09:15",
-        "title": "Daily standup",
-        "description": "Share progress, plans, and blockers with the team",
-        "detailDescription": "Join the team daily standup. Report what you completed yesterday, what you plan to work on today, and any blockers. Listen for dependencies on your work and note action items from the discussion.",
-        "status": "done",
-        "completedStatus": "done",
-        "completedMessage": "Well done on time! 🎉",
-        "completedTime": "09:14"
-      },
-      {
-        "id": "3",
-        "time": "09:30",
-        "dueTime": "09:45",
-        "title": "Sprint planning meeting",
-        "description": "Align on sprint goals and task assignments",
-        "detailDescription": "Attend sprint planning with product and engineering. Review the backlog, estimate remaining stories, clarify acceptance criteria, and confirm ownership for the items you will deliver this sprint.",
-        "status": "late",
-        "completedStatus": "late",
-        "completedMessage": "Done at last!",
-        "completedTime": "09:52"
-      },
-      {
-        "id": "4",
-        "time": "10:15",
-        "dueTime": "11:00",
-        "title": "Code review: auth refactor",
-        "description": "Review PR #247 before the merge window closes",
-        "detailDescription": "Review the authentication refactor pull request. Check token handling, test coverage, error paths, and security implications. Leave actionable comments, approve if ready, or request changes with clear reasoning.",
-        "status": "late",
-        "completedStatus": "late",
-        "completedMessage": "Done at last!",
-        "completedTime": "11:08"
-      },
-      {
-        "id": "5",
-        "time": "11:00",
-        "dueTime": "12:00",
-        "title": "Focused work: API integration",
-        "description": "Implement the user profile endpoint",
-        "detailDescription": "Block out distractions and implement the user profile API integration. Wire up the service layer, add validation, write unit tests, and push a draft PR before lunch so the afternoon review can start early.",
-        "status": "late",
-        "completedStatus": "late",
-        "completedMessage": "Done at last!",
-        "completedTime": "12:12"
-      },
-      {
-        "id": "6",
-        "time": "12:00",
-        "dueTime": "13:00",
-        "title": "Lunch break",
-        "description": "Step away from the screen and recharge",
-        "detailDescription": "Take a proper lunch break away from your desk. A short walk or change of scenery helps you return refreshed for afternoon meetings and focused coding.",
-        "status": "done",
-        "completedStatus": "done",
-        "completedMessage": "Well done on time! 🎉",
-        "completedTime": "12:55"
-      },
-      {
-        "id": "7",
-        "time": "13:30",
-        "dueTime": "14:00",
-        "title": "1:1 with tech lead",
-        "description": "Discuss career growth and current project risks",
-        "detailDescription": "Meet with your tech lead for a regular 1:1. Share progress on current goals, raise any technical concerns on the auth refactor, and agree on priorities for the rest of the week.",
-        "status": "done",
-        "completedStatus": "done",
-        "completedMessage": "Well done on time! 🎉",
-        "completedTime": "13:58"
-      },
-      {
-        "id": "8",
-        "time": "14:30",
-        "dueTime": "15:00",
-        "title": "Backend sync meeting",
-        "description": "Align API contracts with the platform team",
-        "detailDescription": "Join the backend sync to review upcoming API changes, versioning strategy, and shared schema updates. Confirm integration timelines and document any breaking changes that affect your service.",
-        "status": "overdue",
-        "completedStatus": "late",
-        "completedMessage": "Done at last!"
-      },
-      {
-        "id": "9",
-        "time": "15:30",
-        "dueTime": "16:00",
-        "title": "Code review: payment service",
-        "description": "Review PR #251 for the payment retry logic",
-        "detailDescription": "Review the payment service pull request focusing on idempotency, retry backoff, logging, and edge cases around failed transactions. Ensure tests cover timeout and duplicate-request scenarios.",
-        "status": "todo",
-        "completedStatus": "done",
-        "completedMessage": "Well done on time! 🎉"
-      },
-      {
-        "id": "10",
-        "time": "16:00",
-        "dueTime": "17:00",
-        "title": "Focused work: unit tests",
-        "description": "Raise coverage on the profile module",
-        "detailDescription": "Dedicate a focused hour to improving unit test coverage on the profile module. Add missing edge-case tests, fix flaky assertions, and make sure CI stays green before end of day.",
-        "status": "todo",
-        "completedStatus": "done",
-        "completedMessage": "Well done on time! 🎉"
-      },
-      {
-        "id": "11",
-        "time": "17:30",
-        "dueTime": "18:00",
-        "title": "End-of-day e-mail sweep",
-        "description": "Close the loop on open threads before logging off",
-        "detailDescription": "Do a final inbox pass before signing off. Reply to outstanding code review threads, update ticket statuses, send a brief end-of-day summary to the team channel, and queue tomorrow's top priorities.",
-        "status": "todo",
-        "completedStatus": "done",
-        "completedMessage": "Well done on time! 🎉"
-      }
-    ],
-    "timelineItems": [
-      { "type": "time", "id": "time-08-30", "time": "08:30" },
-      { "type": "task", "taskId": "1" },
-      { "type": "time", "id": "time-09-00", "time": "09:00" },
-      { "type": "task", "taskId": "2" },
-      { "type": "time", "id": "time-09-30", "time": "09:30" },
-      { "type": "task", "taskId": "3" },
-      { "type": "time", "id": "time-10-15", "time": "10:15" },
-      { "type": "task", "taskId": "4" },
-      { "type": "time", "id": "time-11-00", "time": "11:00" },
-      { "type": "task", "taskId": "5" },
-      { "type": "time", "id": "time-12-00", "time": "12:00" },
-      { "type": "task", "taskId": "6" },
-      { "type": "time", "id": "time-13-30", "time": "13:30" },
-      { "type": "task", "taskId": "7" },
-      { "type": "time", "id": "time-14-30", "time": "14:30" },
-      { "type": "task", "taskId": "8" },
-      { "type": "time", "id": "time-15-30", "time": "15:30" },
-      { "type": "task", "taskId": "9" },
-      { "type": "time", "id": "time-16-00", "time": "16:00" },
-      { "type": "task", "taskId": "10" },
-      { "type": "time", "id": "time-17-30", "time": "17:30" },
-      { "type": "task", "taskId": "11" },
-      { "type": "time", "id": "time-18-00", "time": "18:00" }
-    ]
-  }
+  "schedules": [
+    {
+      "userId": 1,
+      "greeting": "Good morning!",
+      "footerText": "See you next time!",
+      "tasks": [
+        {
+          "id": "1",
+          "time": "08:30",
+          "dueTime": "08:45",
+          "title": "Check e-mail",
+          "description": "Triage overnight alerts and team updates",
+          "detailDescription": "Scan your inbox for production alerts, failed CI runs, deployment notifications, and code review requests. Reply to blockers, flag incidents for the daily, and archive low-priority threads so you start the day with a clear picture of what needs attention.",
+          "status": "done",
+          "completedStatus": "done",
+          "completedMessage": "Well done on time! 🎉",
+          "completedTime": "08:38"
+        },
+        {
+          "id": "2",
+          "time": "09:00",
+          "dueTime": "09:15",
+          "title": "Daily standup",
+          "description": "Share progress, plans, and blockers with the team",
+          "detailDescription": "Join the team daily standup. Report what you completed yesterday, what you plan to work on today, and any blockers. Listen for dependencies on your work and note action items from the discussion.",
+          "status": "done",
+          "completedStatus": "done",
+          "completedMessage": "Well done on time! 🎉",
+          "completedTime": "09:14"
+        },
+        {
+          "id": "3",
+          "time": "09:30",
+          "dueTime": "09:45",
+          "title": "Sprint planning meeting",
+          "description": "Align on sprint goals and task assignments",
+          "detailDescription": "Attend sprint planning with product and engineering. Review the backlog, estimate remaining stories, clarify acceptance criteria, and confirm ownership for the items you will deliver this sprint.",
+          "status": "late",
+          "completedStatus": "late",
+          "completedMessage": "Done at last!",
+          "completedTime": "09:52"
+        },
+        {
+          "id": "4",
+          "time": "10:15",
+          "dueTime": "11:00",
+          "title": "Code review: auth refactor",
+          "description": "Review PR #247 before the merge window closes",
+          "detailDescription": "Review the authentication refactor pull request. Check token handling, test coverage, error paths, and security implications. Leave actionable comments, approve if ready, or request changes with clear reasoning.",
+          "status": "late",
+          "completedStatus": "late",
+          "completedMessage": "Done at last!",
+          "completedTime": "11:08"
+        },
+        {
+          "id": "5",
+          "time": "11:00",
+          "dueTime": "12:00",
+          "title": "Focused work: API integration",
+          "description": "Implement the user profile endpoint",
+          "detailDescription": "Block out distractions and implement the user profile API integration. Wire up the service layer, add validation, write unit tests, and push a draft PR before lunch so the afternoon review can start early.",
+          "status": "late",
+          "completedStatus": "late",
+          "completedMessage": "Done at last!",
+          "completedTime": "12:12"
+        },
+        {
+          "id": "6",
+          "time": "12:00",
+          "dueTime": "13:00",
+          "title": "Lunch break",
+          "description": "Step away from the screen and recharge",
+          "detailDescription": "Take a proper lunch break away from your desk. A short walk or change of scenery helps you return refreshed for afternoon meetings and focused coding.",
+          "status": "done",
+          "completedStatus": "done",
+          "completedMessage": "Well done on time! 🎉",
+          "completedTime": "12:55"
+        },
+        {
+          "id": "7",
+          "time": "13:30",
+          "dueTime": "14:00",
+          "title": "1:1 with tech lead",
+          "description": "Discuss career growth and current project risks",
+          "detailDescription": "Meet with your tech lead for a regular 1:1. Share progress on current goals, raise any technical concerns on the auth refactor, and agree on priorities for the rest of the week.",
+          "status": "done",
+          "completedStatus": "done",
+          "completedMessage": "Well done on time! 🎉",
+          "completedTime": "13:58"
+        },
+        {
+          "id": "8",
+          "time": "14:30",
+          "dueTime": "15:00",
+          "title": "Backend sync meeting",
+          "description": "Align API contracts with the platform team",
+          "detailDescription": "Join the backend sync to review upcoming API changes, versioning strategy, and shared schema updates. Confirm integration timelines and document any breaking changes that affect your service.",
+          "status": "overdue",
+          "completedStatus": "late",
+          "completedMessage": "Done at last!"
+        },
+        {
+          "id": "9",
+          "time": "15:30",
+          "dueTime": "16:00",
+          "title": "Code review: payment service",
+          "description": "Review PR #251 for the payment retry logic",
+          "detailDescription": "Review the payment service pull request focusing on idempotency, retry backoff, logging, and edge cases around failed transactions. Ensure tests cover timeout and duplicate-request scenarios.",
+          "status": "todo",
+          "completedStatus": "done",
+          "completedMessage": "Well done on time! 🎉"
+        },
+        {
+          "id": "10",
+          "time": "16:00",
+          "dueTime": "17:00",
+          "title": "Focused work: unit tests",
+          "description": "Raise coverage on the profile module",
+          "detailDescription": "Dedicate a focused hour to improving unit test coverage on the profile module. Add missing edge-case tests, fix flaky assertions, and make sure CI stays green before end of day.",
+          "status": "todo",
+          "completedStatus": "done",
+          "completedMessage": "Well done on time! 🎉"
+        },
+        {
+          "id": "11",
+          "time": "17:30",
+          "dueTime": "18:00",
+          "title": "End-of-day e-mail sweep",
+          "description": "Close the loop on open threads before logging off",
+          "detailDescription": "Do a final inbox pass before signing off. Reply to outstanding code review threads, update ticket statuses, send a brief end-of-day summary to the team channel, and queue tomorrow's top priorities.",
+          "status": "todo",
+          "completedStatus": "done",
+          "completedMessage": "Well done on time! 🎉"
+        }
+      ],
+      "timelineItems": [
+        {
+          "type": "time",
+          "id": "time-08-30",
+          "time": "08:30"
+        },
+        {
+          "type": "task",
+          "taskId": "1"
+        },
+        {
+          "type": "time",
+          "id": "time-09-00",
+          "time": "09:00"
+        },
+        {
+          "type": "task",
+          "taskId": "2"
+        },
+        {
+          "type": "time",
+          "id": "time-09-30",
+          "time": "09:30"
+        },
+        {
+          "type": "task",
+          "taskId": "3"
+        },
+        {
+          "type": "time",
+          "id": "time-10-15",
+          "time": "10:15"
+        },
+        {
+          "type": "task",
+          "taskId": "4"
+        },
+        {
+          "type": "time",
+          "id": "time-11-00",
+          "time": "11:00"
+        },
+        {
+          "type": "task",
+          "taskId": "5"
+        },
+        {
+          "type": "time",
+          "id": "time-12-00",
+          "time": "12:00"
+        },
+        {
+          "type": "task",
+          "taskId": "6"
+        },
+        {
+          "type": "time",
+          "id": "time-13-30",
+          "time": "13:30"
+        },
+        {
+          "type": "task",
+          "taskId": "7"
+        },
+        {
+          "type": "time",
+          "id": "time-14-30",
+          "time": "14:30"
+        },
+        {
+          "type": "task",
+          "taskId": "8"
+        },
+        {
+          "type": "time",
+          "id": "time-15-30",
+          "time": "15:30"
+        },
+        {
+          "type": "task",
+          "taskId": "9"
+        },
+        {
+          "type": "time",
+          "id": "time-16-00",
+          "time": "16:00"
+        },
+        {
+          "type": "task",
+          "taskId": "10"
+        },
+        {
+          "type": "time",
+          "id": "time-17-30",
+          "time": "17:30"
+        },
+        {
+          "type": "task",
+          "taskId": "11"
+        },
+        {
+          "type": "time",
+          "id": "time-18-00",
+          "time": "18:00"
+        }
+      ]
+    },
+    {
+      "userId": 2,
+      "greeting": "Good morning!",
+      "footerText": "See you next time!",
+      "tasks": [],
+      "timelineItems": []
+    },
+    {
+      "userId": 3,
+      "greeting": "Good morning!",
+      "footerText": "See you next time!",
+      "tasks": [],
+      "timelineItems": []
+    },
+    {
+      "userId": 4,
+      "greeting": "Good morning!",
+      "footerText": "See you next time!",
+      "tasks": [],
+      "timelineItems": []
+    }
+  ]
 }

@@ -21,11 +21,14 @@ export type CreatedUser = {
   occupation: string;
   username: string;
   displayName: string;
+  isAdmin: boolean;
+  mustSetupPassword: boolean;
   createdAt: string;
 };
 
 export type CreateUserSuccess = {
   user: CreatedUser;
+  temporaryPassword: string;
   message: string;
 };
 

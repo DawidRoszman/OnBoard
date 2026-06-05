@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -6,11 +5,11 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppLoadingState } from '@/components/app-loading-state';
+import { ScheduleMenuButton } from '@/components/schedule/schedule-menu-button';
 import { ScheduleTaskCard } from '@/components/schedule/schedule-task-card';
 import { ScheduleTimelineLine } from '@/components/schedule/schedule-timeline-line';
 import {
   BACKGROUND_COLOR,
-  BRAND_COLOR,
   LABEL_COLOR,
   MESSAGE_COLOR,
 } from '@/constants/auth-ui';
@@ -91,7 +90,7 @@ export default function ScheduleScreen() {
         <View style={styles.navSide} />
         <Text style={styles.navTitle}>{"Today's schedule"}</Text>
         <View style={[styles.navSide, styles.navSideRight]}>
-          <Ionicons name="menu" size={20} color={BRAND_COLOR} />
+          <ScheduleMenuButton />
         </View>
       </View>
 
@@ -100,25 +99,34 @@ export default function ScheduleScreen() {
           <Text style={styles.errorText}>{errorMessage}</Text>
         </View>
       ) : schedule ? (
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          <Text style={styles.greetingHeading}>{schedule.greeting}</Text>
+        schedule.tasks.length === 0 ? (
+          <View style={styles.centeredState}>
+            <Text style={styles.emptyTitle}>{schedule.greeting}</Text>
+            <Text style={styles.emptyText}>
+              Your schedule is empty. Check back later for new tasks.
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}>
+            <Text style={styles.greetingHeading}>{schedule.greeting}</Text>
 
-          <ScheduleTimelineLine>
-            {schedule.timelineItems.map((item, index) => (
-              <ScheduleTimelineEntry
-                key={item.type === 'time' ? item.id : item.task.id}
-                item={item}
-                isLast={index === schedule.timelineItems.length - 1}
-                onTaskPress={openTask}
-              />
-            ))}
-          </ScheduleTimelineLine>
+            <ScheduleTimelineLine>
+              {schedule.timelineItems.map((item, index) => (
+                <ScheduleTimelineEntry
+                  key={item.type === 'time' ? item.id : item.task.id}
+                  item={item}
+                  isLast={index === schedule.timelineItems.length - 1}
+                  onTaskPress={openTask}
+                />
+              ))}
+            </ScheduleTimelineLine>
 
-          <Text style={styles.footerText}>{schedule.footerText}</Text>
-        </ScrollView>
+            <Text style={styles.footerText}>{schedule.footerText}</Text>
+          </ScrollView>
+        )
       ) : null}
     </SafeAreaView>
   );
@@ -191,6 +199,19 @@ const styles = StyleSheet.create({
     color: LABEL_COLOR,
     fontSize: 16,
     textAlign: 'center',
+  },
+  emptyTitle: {
+    color: MESSAGE_COLOR,
+    fontSize: 18,
+    fontWeight: '400',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptyText: {
+    color: LABEL_COLOR,
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
   },
   scroll: {
     flex: 1,

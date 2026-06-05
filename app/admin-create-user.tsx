@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AdminFormField } from '@/components/admin/admin-form-field';
+import { ScheduleMenuButton } from '@/components/schedule/schedule-menu-button';
 import { DateOfBirthField } from '@/components/admin/date-of-birth-field';
 import { OccupationSelectField } from '@/components/admin/occupation-select-field';
 import {
@@ -188,8 +189,14 @@ export default function AdminCreateUserScreen() {
     setIsSubmitting(true);
 
     try {
-      await createUser(trimmedFormValues);
-      router.replace('/admin-create-user-success');
+      const result = await createUser(trimmedFormValues);
+      router.replace({
+        pathname: '/admin-create-user-success',
+        params: {
+          username: result.user.username,
+          temporaryPassword: result.temporaryPassword,
+        },
+      });
     } catch (error) {
       if (error instanceof AdminError) {
         setErrorMessage(error.message);
@@ -219,7 +226,7 @@ export default function AdminCreateUserScreen() {
           </Pressable>
           <Text style={styles.navTitle}>Admin Panel</Text>
           <View style={styles.navSideRight}>
-            <Ionicons name="menu" size={20} color={BRAND_COLOR} />
+            <ScheduleMenuButton />
           </View>
         </View>
 

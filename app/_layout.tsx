@@ -29,6 +29,7 @@ export default function RootLayout() {
           options={{ headerShown: false }}
         />
         <Stack.Screen name="reset-password" options={{ headerShown: false }} />
+        <Stack.Screen name="setup-password" options={{ headerShown: false }} />
         <Stack.Screen
           name="admin-create-user"
           options={{ headerShown: false }}

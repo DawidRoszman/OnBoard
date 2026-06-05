@@ -4,6 +4,16 @@ export type AuthUser = {
   id: number;
   username: string;
   displayName: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  address?: string;
+  occupation?: string;
+  isAdmin: boolean;
+  mustSetupPassword: boolean;
+  createdAt?: string;
 };
 
 export type LoginSuccess = {
@@ -88,6 +98,41 @@ export async function recoverAccount(email: string): Promise<RecoverSuccess> {
   }
 
   return body as RecoverSuccess;
+}
+
+export type SetupPasswordSuccess = {
+  user: AuthUser;
+  message: string;
+};
+
+export async function setupPassword(
+  username: string,
+  temporaryPassword: string,
+  password: string,
+  confirmPassword: string,
+): Promise<SetupPasswordSuccess> {
+  const response = await fetch(`${API_BASE_URL}/setup-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username,
+      temporaryPassword,
+      password,
+      confirmPassword,
+    }),
+  });
+
+  const body = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message =
+      typeof body.error === 'string'
+        ? body.error
+        : 'Password setup failed. Please try again.';
+    throw new AuthError(message, response.status);
+  }
+
+  return body as SetupPasswordSuccess;
 }
 
 export type ResetPasswordSuccess = {
