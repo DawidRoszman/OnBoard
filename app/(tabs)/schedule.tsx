@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -14,13 +15,17 @@ import {
   SCHEDULE_TIMELINE_X,
 } from '@/constants/schedule-layout';
 import {
-  groupScheduleTasksByTime,
-  SCHEDULE_DATE_LABEL,
-  SCHEDULE_TASKS,
+  SCHEDULE_GREETING,
+  SCHEDULE_TIMELINE_ITEMS,
+  type ScheduleTimelineItem,
 } from '@/constants/schedule-data';
 
 export default function ScheduleScreen() {
-  const scheduleGroups = groupScheduleTasksByTime(SCHEDULE_TASKS);
+  const router = useRouter();
+
+  function openTask(taskId: string) {
+    router.push(`./schedule-task/${taskId}`);
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -30,9 +35,7 @@ export default function ScheduleScreen() {
         </View>
         <Text style={styles.navTitle}>{"Today's schedule"}</Text>
         <View style={[styles.navSide, styles.navSideRight]}>
-          <View style={styles.avatar}>
-            <View style={styles.avatarInner} />
-          </View>
+          <Ionicons name="menu" size={20} color={BRAND_COLOR} />
         </View>
       </View>
 
@@ -40,39 +43,51 @@ export default function ScheduleScreen() {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
-        <Text style={styles.dateHeading}>{SCHEDULE_DATE_LABEL}</Text>
+        <Text style={styles.greetingHeading}>{SCHEDULE_GREETING}</Text>
 
         <ScheduleTimelineLine>
-          {scheduleGroups.map((group, groupIndex) => (
-            <View
-              key={`${group.time}-${groupIndex}`}
-              style={[
-                styles.timeGroup,
-                groupIndex < scheduleGroups.length - 1 && styles.timeGroupGap,
-              ]}>
-              <View style={styles.timeSlot}>
-                <View style={styles.timeBadge}>
-                  <Text style={styles.timeLabel}>{group.time}</Text>
-                </View>
-              </View>
-
-              {group.tasks.map((task, taskIndex) => (
-                <View
-                  key={task.id}
-                  style={[
-                    styles.taskRow,
-                    taskIndex > 0 && styles.taskRowSameTime,
-                  ]}>
-                  <ScheduleTaskCard task={task} />
-                </View>
-              ))}
-            </View>
+          {SCHEDULE_TIMELINE_ITEMS.map((item, index) => (
+            <ScheduleTimelineEntry
+              key={item.type === 'time' ? item.id : item.task.id}
+              item={item}
+              isLast={index === SCHEDULE_TIMELINE_ITEMS.length - 1}
+              onTaskPress={openTask}
+            />
           ))}
         </ScheduleTimelineLine>
 
         <Text style={styles.footerText}>See you next time!</Text>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function ScheduleTimelineEntry({
+  item,
+  isLast,
+  onTaskPress,
+}: {
+  item: ScheduleTimelineItem;
+  isLast: boolean;
+  onTaskPress: (taskId: string) => void;
+}) {
+  if (item.type === 'time') {
+    return (
+      <View style={[styles.timeEntry, isLast && styles.lastEntry]}>
+        <View style={styles.timeBadge}>
+          <Text style={styles.timeLabel}>{item.time}</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.taskRow, isLast && styles.lastEntry]}>
+      <ScheduleTaskCard
+        task={item.task}
+        onPress={() => onTaskPress(item.task.id)}
+      />
+    </View>
   );
 }
 
@@ -104,17 +119,6 @@ const styles = StyleSheet.create({
     color: '#1F2024',
     textAlign: 'center',
   },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    overflow: 'hidden',
-    backgroundColor: '#333333',
-  },
-  avatarInner: {
-    flex: 1,
-    backgroundColor: '#D4A574',
-  },
   scroll: {
     flex: 1,
   },
@@ -122,21 +126,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: SCHEDULE_CONTENT_HORIZONTAL,
     paddingBottom: 32,
   },
-  dateHeading: {
+  greetingHeading: {
     fontSize: 18,
     fontWeight: '400',
     color: MESSAGE_COLOR,
     lineHeight: 27,
-    marginBottom: 12,
+    marginBottom: 4,
     marginLeft: 8,
   },
-  timeGroup: {
-    marginBottom: 4,
-  },
-  timeGroupGap: {
-    marginBottom: 10,
-  },
-  timeSlot: {
+  timeEntry: {
     height: 26,
     marginBottom: 6,
     zIndex: 2,
@@ -156,10 +154,10 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   taskRow: {
-    marginTop: 4,
+    marginBottom: 6,
   },
-  taskRowSameTime: {
-    marginTop: 10,
+  lastEntry: {
+    marginBottom: 0,
   },
   footerText: {
     fontSize: 18,

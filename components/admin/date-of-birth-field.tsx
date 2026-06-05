@@ -111,11 +111,12 @@ function fromIsoDate(isoValue: string): string {
 
 type WebDateInputProps = TextInputProps & {
   type?: 'date';
+  max?: string;
 };
 
-const WebDateInput = TextInput as typeof TextInput & {
-  defaultProps?: Partial<WebDateInputProps>;
-};
+function WebDateInput({ max, type, ...props }: WebDateInputProps) {
+  return <TextInput {...props} {...({ max, type } as object)} />;
+}
 
 export function DateOfBirthField({
   value,
