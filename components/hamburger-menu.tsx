@@ -21,7 +21,6 @@ import {
   BACKGROUND_COLOR,
   BORDER_COLOR,
   BRAND_COLOR,
-  HELPER_COLOR,
   LABEL_COLOR,
 } from '@/constants/auth-ui';
 import { clearAuthSession, getAuthUser } from '@/services/auth-session';
@@ -29,7 +28,7 @@ import { clearAuthSession, getAuthUser } from '@/services/auth-session';
 const DRAWER_WIDTH = Math.min(320, Dimensions.get('window').width * 0.82);
 const ANIMATION_DURATION_MS = 260;
 
-export function ScheduleMenuButton() {
+export function HamburgerMenu() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -129,10 +128,6 @@ export function ScheduleMenuButton() {
               </Pressable>
             </View>
 
-            {currentUser?.displayName ? (
-              <Text style={styles.userName}>{currentUser.displayName}</Text>
-            ) : null}
-
             <View style={styles.menuItems}>
               {isAdmin ? (
                 <Pressable
@@ -209,11 +204,6 @@ const styles = StyleSheet.create({
     height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  userName: {
-    color: HELPER_COLOR,
-    fontSize: 14,
-    marginBottom: 24,
   },
   menuItems: {
     gap: 4,

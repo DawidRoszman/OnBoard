@@ -1,13 +1,14 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BACKGROUND_COLOR, BRAND_COLOR, MESSAGE_COLOR } from '@/constants/auth-ui';
+import { AppNavBar } from '@/components/app-navbar';
+import { BACKGROUND_COLOR, MESSAGE_COLOR } from '@/constants/auth-ui';
 
 export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <AppNavBar title="Profile" />
       <View style={styles.container}>
-        <Text style={styles.title}>Profile</Text>
         <Text style={styles.description}>
           Signed in as Demo User (user.name). Profile settings and account details will be added
           later.
@@ -26,12 +27,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 24,
-    gap: 12,
-  },
-  title: {
-    color: BRAND_COLOR,
-    fontSize: 24,
-    fontWeight: '700',
   },
   description: {
     color: MESSAGE_COLOR,

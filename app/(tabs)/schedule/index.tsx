@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppLoadingState } from '@/components/app-loading-state';
-import { ScheduleMenuButton } from '@/components/schedule/schedule-menu-button';
+import { AppNavBar } from '@/components/app-navbar';
 import { ScheduleTaskCard } from '@/components/schedule/schedule-task-card';
 import { ScheduleTimelineLine } from '@/components/schedule/schedule-timeline-line';
 import {
@@ -73,7 +73,10 @@ export default function ScheduleScreen() {
   );
 
   function openTask(taskId: string) {
-    router.push(`./schedule-task/${taskId}`);
+    router.push({
+      pathname: '/(tabs)/schedule/[taskId]',
+      params: { taskId },
+    });
   }
 
   if (isLoading) {
@@ -86,13 +89,7 @@ export default function ScheduleScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.navBar}>
-        <View style={styles.navSide} />
-        <Text style={styles.navTitle}>{"Today's schedule"}</Text>
-        <View style={[styles.navSide, styles.navSideRight]}>
-          <ScheduleMenuButton />
-        </View>
-      </View>
+      <AppNavBar title={"Today's schedule"} />
 
       {errorMessage ? (
         <View style={styles.centeredState}>
@@ -165,29 +162,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BACKGROUND_COLOR,
-  },
-  navBar: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    backgroundColor: BACKGROUND_COLOR,
-  },
-  navSide: {
-    width: 36,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  navSideRight: {
-    alignItems: 'flex-end',
-  },
-  navTitle: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1F2024',
-    textAlign: 'center',
   },
   centeredState: {
     flex: 1,

@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppLoadingState } from '@/components/app-loading-state';
-import { ScheduleMenuButton } from '@/components/schedule/schedule-menu-button';
+import { AppNavBar } from '@/components/app-navbar';
 import {
   BACKGROUND_COLOR,
   BRAND_COLOR,
@@ -158,7 +158,12 @@ export default function ScheduleTaskDetailsScreen() {
   }, [taskId]);
 
   function navigateToSchedule() {
-    router.replace('/schedule');
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/(tabs)/schedule');
   }
 
   const detail = useMemo(() => {
@@ -170,6 +175,7 @@ export default function ScheduleTaskDetailsScreen() {
   }, [task]);
 
   const isShowingStaleTask = task !== null && task.id !== taskId;
+  const navTitle = task?.title ?? 'Task';
 
   if (isLoading || isShowingStaleTask) {
     return (
@@ -182,7 +188,7 @@ export default function ScheduleTaskDetailsScreen() {
   if (errorMessage) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScheduleTaskNavBar onBack={navigateToSchedule} />
+        <ScheduleTaskNavBar title={navTitle} onBack={navigateToSchedule} />
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>{errorMessage}</Text>
         </View>
@@ -193,7 +199,7 @@ export default function ScheduleTaskDetailsScreen() {
   if (!task || !detail) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScheduleTaskNavBar onBack={navigateToSchedule} />
+        <ScheduleTaskNavBar title={navTitle} onBack={navigateToSchedule} />
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>Task not found.</Text>
         </View>
@@ -228,7 +234,7 @@ export default function ScheduleTaskDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScheduleTaskNavBar onBack={navigateToSchedule} />
+      <ScheduleTaskNavBar title={task.title} onBack={navigateToSchedule} />
 
       <View style={styles.content}>
         <View style={styles.summaryRow}>
@@ -365,21 +371,25 @@ function ConfettiBurst({ onFinished }: { onFinished: () => void }) {
   );
 }
 
-function ScheduleTaskNavBar({ onBack }: { onBack: () => void }) {
+function ScheduleTaskNavBar({
+  title,
+  onBack,
+}: {
+  title: string;
+  onBack: () => void;
+}) {
   return (
-    <View style={styles.navBar}>
-      <Pressable
-        style={styles.navSide}
-        onPress={onBack}
-        accessibilityRole="button"
-        accessibilityLabel="Go back">
-        <Ionicons name="chevron-back" size={24} color={BRAND_COLOR} />
-      </Pressable>
-      <Text style={styles.navTitle}>Admin Panel</Text>
-      <View style={[styles.navSide, styles.navSideRight]}>
-        <ScheduleMenuButton />
-      </View>
-    </View>
+    <AppNavBar
+      title={title}
+      leftAction={
+        <Pressable
+          onPress={onBack}
+          accessibilityRole="button"
+          accessibilityLabel="Go back">
+          <Ionicons name="chevron-back" size={24} color={BRAND_COLOR} />
+        </Pressable>
+      }
+    />
   );
 }
 
@@ -448,29 +458,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BACKGROUND_COLOR,
-  },
-  navBar: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    backgroundColor: BACKGROUND_COLOR,
-  },
-  navSide: {
-    width: 36,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  navSideRight: {
-    alignItems: 'flex-end',
-  },
-  navTitle: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1F2024',
-    textAlign: 'center',
   },
   content: {
     flex: 1,

@@ -112,7 +112,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen name="schedule-task/[taskId]" options={{ href: null }} />
       <Tabs.Screen name="explore" options={{ href: null }} />
     </Tabs>
   );

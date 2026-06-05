@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AdminFormField } from '@/components/admin/admin-form-field';
-import { ScheduleMenuButton } from '@/components/schedule/schedule-menu-button';
+import { HamburgerMenu } from '@/components/hamburger-menu';
 import { DateOfBirthField } from '@/components/admin/date-of-birth-field';
 import { OccupationSelectField } from '@/components/admin/occupation-select-field';
 import {
@@ -226,7 +226,7 @@ export default function AdminCreateUserScreen() {
           </Pressable>
           <Text style={styles.navTitle}>Admin Panel</Text>
           <View style={styles.navSideRight}>
-            <ScheduleMenuButton />
+            <HamburgerMenu />
           </View>
         </View>
 
