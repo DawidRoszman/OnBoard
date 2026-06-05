@@ -85,9 +85,7 @@ export default function ScheduleScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.navBar}>
-        <View style={styles.navSide}>
-          <Ionicons name="chevron-back" size={20} color={BRAND_COLOR} />
-        </View>
+        <View style={styles.navSide} />
         <Text style={styles.navTitle}>{"Today's schedule"}</Text>
         <View style={[styles.navSide, styles.navSideRight]}>
           <Ionicons name="menu" size={20} color={BRAND_COLOR} />
