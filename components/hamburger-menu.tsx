@@ -1,5 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
+import { withReturnTo } from '@/lib/back-navigation';
+import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
 import {
   Dimensions,
@@ -18,18 +20,24 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  BACKGROUND_COLOR,
-  BORDER_COLOR,
   BRAND_COLOR,
-  LABEL_COLOR,
+  MESSAGE_COLOR,
 } from '@/constants/auth-ui';
 import { clearAuthSession, getAuthUser } from '@/services/auth-session';
 
-const DRAWER_WIDTH = Math.min(320, Dimensions.get('window').width * 0.82);
+type MenuItemProps = {
+  iconName: ComponentProps<typeof Ionicons>['name'];
+  label: string;
+  onPress?: () => void;
+};
+
+const DRAWER_WIDTH = Math.min(310, Dimensions.get('window').width * 0.78);
 const ANIMATION_DURATION_MS = 260;
+const DRAWER_BACKGROUND_COLOR = '#FFFFFF';
 
 export function HamburgerMenu() {
   const router = useRouter();
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const currentUser = getAuthUser();
@@ -74,6 +82,16 @@ export function HamburgerMenu() {
     router.push('/admin-create-user');
   }
 
+  function openUsers() {
+    closeMenu();
+    router.push(withReturnTo('/(tabs)/admin-users', pathname));
+  }
+
+  function openMentor() {
+    closeMenu();
+    router.push(withReturnTo('/(tabs)/mentor', pathname));
+  }
+
   function handleLogout() {
     closeMenu();
     clearAuthSession();
@@ -95,7 +113,7 @@ export function HamburgerMenu() {
         onPress={openMenu}
         accessibilityRole="button"
         accessibilityLabel="Open menu">
-        <Ionicons name="menu" size={20} color={BRAND_COLOR} />
+        <Ionicons name="menu" size={24} color={BRAND_COLOR} />
       </Pressable>
 
       <Modal
@@ -124,35 +142,54 @@ export function HamburgerMenu() {
                 onPress={closeMenu}
                 accessibilityRole="button"
                 accessibilityLabel="Close menu">
-                <Ionicons name="close" size={22} color={LABEL_COLOR} />
+                <Ionicons name="close" size={24} color={MESSAGE_COLOR} />
               </Pressable>
             </View>
 
             <View style={styles.menuItems}>
               {isAdmin ? (
-                <Pressable
-                  style={styles.menuItem}
-                  onPress={openCreateUser}
-                  accessibilityRole="button"
-                  accessibilityLabel="Create user">
-                  <Ionicons name="person-add-outline" size={20} color={BRAND_COLOR} />
-                  <Text style={styles.menuItemText}>Create user</Text>
-                </Pressable>
+                <>
+                  <MenuItem
+                    iconName="person-add-outline"
+                    label="Create user"
+                    onPress={openCreateUser}
+                  />
+                  <MenuItem
+                    iconName="people-outline"
+                    label="Users"
+                    onPress={openUsers}
+                  />
+                </>
               ) : null}
 
-              <Pressable
-                style={styles.menuItem}
+              <MenuItem
+                iconName="school-outline"
+                label="Your mentor"
+                onPress={openMentor}
+              />
+              <MenuItem
+                iconName="log-out-outline"
+                label="Log out"
                 onPress={handleLogout}
-                accessibilityRole="button"
-                accessibilityLabel="Log out">
-                <Ionicons name="log-out-outline" size={20} color={BRAND_COLOR} />
-                <Text style={styles.menuItemText}>Log out</Text>
-              </Pressable>
+              />
             </View>
           </Animated.View>
         </View>
       </Modal>
     </>
+  );
+}
+
+function MenuItem({ iconName, label, onPress }: MenuItemProps) {
+  return (
+    <Pressable
+      style={styles.menuItem}
+      onPress={onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={onPress ? label : undefined}>
+      <Ionicons name={iconName} size={25} color={BRAND_COLOR} />
+      <Text style={styles.menuItemText}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -167,7 +204,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    backgroundColor: 'rgba(0, 0, 0, 0.88)',
   },
   overlayPressable: {
     flex: 1,
@@ -178,46 +215,42 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     width: DRAWER_WIDTH,
-    backgroundColor: BACKGROUND_COLOR,
-    borderLeftWidth: 1,
-    borderLeftColor: BORDER_COLOR,
-    shadowColor: '#000000',
-    shadowOffset: { width: -2, height: 0 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 8,
-    paddingHorizontal: 20,
+    backgroundColor: DRAWER_BACKGROUND_COLOR,
   },
   drawerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 27,
+    paddingHorizontal: 24,
   },
   drawerTitle: {
-    color: LABEL_COLOR,
+    color: MESSAGE_COLOR,
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: '400',
   },
   closeButton: {
-    width: 36,
-    height: 36,
+    width: 24,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
   menuItems: {
-    gap: 4,
+    gap: 7,
   },
   menuItem: {
+    height: 43,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 4,
+    gap: 16,
+    paddingLeft: 28,
+    paddingRight: 24,
+    backgroundColor: DRAWER_BACKGROUND_COLOR,
   },
   menuItemText: {
-    color: LABEL_COLOR,
-    fontSize: 16,
-    fontWeight: '500',
+    color: MESSAGE_COLOR,
+    fontSize: 18,
+    fontWeight: '400',
+    lineHeight: 27,
   },
 });

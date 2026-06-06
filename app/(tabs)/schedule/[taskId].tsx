@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppLoadingState } from '@/components/app-loading-state';
+import { AppBackButton } from '@/components/app-back-button';
 import { AppNavBar } from '@/components/app-navbar';
 import {
   BACKGROUND_COLOR,
@@ -99,7 +100,6 @@ const CONFETTI_PIECES = [
 ] as const;
 
 export default function ScheduleTaskDetailsScreen() {
-  const router = useRouter();
   const { taskId } = useLocalSearchParams<{ taskId?: string }>();
   const [task, setTask] = useState<ScheduleTask | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -157,15 +157,6 @@ export default function ScheduleTaskDetailsScreen() {
     };
   }, [taskId]);
 
-  function navigateToSchedule() {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-
-    router.replace('/(tabs)/schedule');
-  }
-
   const detail = useMemo(() => {
     if (!task) {
       return undefined;
@@ -188,7 +179,7 @@ export default function ScheduleTaskDetailsScreen() {
   if (errorMessage) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScheduleTaskNavBar title={navTitle} onBack={navigateToSchedule} />
+        <ScheduleTaskNavBar title={navTitle} />
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>{errorMessage}</Text>
         </View>
@@ -199,7 +190,7 @@ export default function ScheduleTaskDetailsScreen() {
   if (!task || !detail) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScheduleTaskNavBar title={navTitle} onBack={navigateToSchedule} />
+        <ScheduleTaskNavBar title={navTitle} />
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>Task not found.</Text>
         </View>
@@ -234,7 +225,7 @@ export default function ScheduleTaskDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScheduleTaskNavBar title={task.title} onBack={navigateToSchedule} />
+      <ScheduleTaskNavBar title={task.title} />
 
       <View style={styles.content}>
         <View style={styles.summaryRow}>
@@ -371,24 +362,11 @@ function ConfettiBurst({ onFinished }: { onFinished: () => void }) {
   );
 }
 
-function ScheduleTaskNavBar({
-  title,
-  onBack,
-}: {
-  title: string;
-  onBack: () => void;
-}) {
+function ScheduleTaskNavBar({ title }: { title: string }) {
   return (
     <AppNavBar
       title={title}
-      leftAction={
-        <Pressable
-          onPress={onBack}
-          accessibilityRole="button"
-          accessibilityLabel="Go back">
-          <Ionicons name="chevron-back" size={24} color={BRAND_COLOR} />
-        </Pressable>
-      }
+      leftAction={<AppBackButton fallbackRoute="/(tabs)/schedule" />}
     />
   );
 }

@@ -1,4 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -16,14 +19,44 @@ export default function AdminCreateUserSuccessScreen() {
     username?: string;
     temporaryPassword?: string;
   }>();
+  const [hasCopiedCredentials, setHasCopiedCredentials] = useState(false);
 
   function handleGoBack() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
     router.replace('/(tabs)/schedule');
   }
 
+  async function handleCopyCredentials() {
+    const credentialLines = [
+      username ? `Username: ${username}` : null,
+      temporaryPassword ? `Temporary password: ${temporaryPassword}` : null,
+    ].filter((line): line is string => line !== null);
+
+    if (credentialLines.length === 0) {
+      return;
+    }
+
+    await Clipboard.setStringAsync(credentialLines.join('\n'));
+    setHasCopiedCredentials(true);
+  }
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
+      <View style={styles.navBar}>
+        <Pressable
+          style={styles.navBackButton}
+          onPress={handleGoBack}
+          accessibilityRole="button"
+          accessibilityLabel="Go back">
+          <Ionicons name="chevron-back" size={20} color={BRAND_COLOR} />
+        </Pressable>
+      </View>
+
       <View style={styles.container}>
         <View style={styles.brandBlock}>
           <Text style={styles.brandTitle}>OnBoard</Text>
@@ -52,10 +85,12 @@ export default function AdminCreateUserSuccessScreen() {
         <View style={styles.actionsRow}>
           <Pressable
             style={styles.primaryButton}
-            onPress={handleGoBack}
+            onPress={handleCopyCredentials}
             accessibilityRole="button"
-            accessibilityLabel="Go back">
-            <Text style={styles.primaryButtonText}>Go back</Text>
+            accessibilityLabel="Copy credentials">
+            <Text style={styles.primaryButtonText}>
+              {hasCopiedCredentials ? 'Copied' : 'Copy credentials'}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -68,11 +103,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BACKGROUND_COLOR,
   },
+  navBar: {
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  navBackButton: {
+    width: 36,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: BACKGROUND_COLOR,
     paddingHorizontal: 61,
-    paddingTop: 48,
+    paddingTop: 8,
   },
   brandBlock: {
     alignSelf: 'center',

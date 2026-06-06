@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
+import { withReturnTo } from '@/lib/back-navigation';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
@@ -8,8 +9,15 @@ import {
 import { BRAND_COLOR, MESSAGE_COLOR } from '@/constants/auth-ui';
 import { docsRoutes } from '@/lib/docs-navigation';
 
+const MENTOR_ROUTE = '/(tabs)/mentor';
+
 export function DocsHelpActions() {
   const router = useRouter();
+  const pathname = usePathname();
+
+  function openMentor() {
+    router.push(withReturnTo(MENTOR_ROUTE, pathname));
+  }
 
   return (
     <View style={styles.container}>
@@ -25,6 +33,7 @@ export function DocsHelpActions() {
       <Text style={styles.orText}>or</Text>
       <Pressable
         style={styles.secondaryButton}
+        onPress={openMentor}
         accessibilityRole="button"
         accessibilityLabel="Contact your mentor">
         <Ionicons name="chatbubble-ellipses-outline" size={20} color={MESSAGE_COLOR} />

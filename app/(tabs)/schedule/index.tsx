@@ -1,5 +1,6 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
+import { withReturnTo } from '@/lib/back-navigation';
 import { useCallback, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -73,10 +74,9 @@ export default function ScheduleScreen() {
   );
 
   function openTask(taskId: string) {
-    router.push({
-      pathname: '/(tabs)/schedule/[taskId]',
-      params: { taskId },
-    });
+    router.push(
+      withReturnTo(`/(tabs)/schedule/${taskId}`, '/(tabs)/schedule'),
+    );
   }
 
   if (isLoading) {

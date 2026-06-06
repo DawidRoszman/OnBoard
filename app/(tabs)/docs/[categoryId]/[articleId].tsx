@@ -1,5 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import type { Href } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { withReturnTo } from '@/lib/back-navigation';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,7 +13,10 @@ import { BACKGROUND_COLOR, MESSAGE_COLOR } from '@/constants/auth-ui';
 import { DOCS_HORIZONTAL_PADDING, DOCS_SUBTITLE } from '@/constants/docs-ui';
 import { getArticleById } from '@/data/docs';
 
+const MENTOR_PROFILE_ROUTE = '/(tabs)/mentor';
+
 export default function DocsArticleScreen() {
+  const router = useRouter();
   const { categoryId, articleId } = useLocalSearchParams<{
     categoryId?: string;
     articleId?: string;
@@ -24,6 +29,20 @@ export default function DocsArticleScreen() {
 
   const isValidArticle =
     article !== undefined && article.categoryId === categoryId;
+
+  function openMentorProfile() {
+    if (!categoryId || !articleId) {
+      router.push(MENTOR_PROFILE_ROUTE as Href);
+      return;
+    }
+
+    router.push(
+      withReturnTo(
+        MENTOR_PROFILE_ROUTE,
+        `/(tabs)/docs/${categoryId}/${articleId}`,
+      ),
+    );
+  }
 
   if (!isValidArticle || !article.sections) {
     return (
@@ -111,6 +130,7 @@ export default function DocsArticleScreen() {
                 name={section.mentorCard.name}
                 message={section.mentorCard.message}
                 buttonLabel={section.mentorCard.buttonLabel}
+                onPress={openMentorProfile}
               />
             ) : null}
           </View>

@@ -14,12 +14,14 @@ type DocsMentorCardProps = {
   name: string;
   message: string;
   buttonLabel: string;
+  onPress?: () => void;
 };
 
 export function DocsMentorCard({
   name,
   message,
   buttonLabel,
+  onPress,
 }: DocsMentorCardProps) {
   const messageLines = message.split('\n');
 
@@ -36,6 +38,7 @@ export function DocsMentorCard({
           </View>
           <Pressable
             style={styles.button}
+            onPress={onPress}
             accessibilityRole="button"
             accessibilityLabel={buttonLabel}>
             <Ionicons name="chatbubble-outline" size={20} color={MESSAGE_COLOR} />
