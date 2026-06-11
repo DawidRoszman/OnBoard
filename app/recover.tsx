@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppBackButton } from '@/components/app-back-button';
 import {
   BACKGROUND_COLOR,
   BORDER_COLOR,
@@ -62,8 +63,11 @@ export default function RecoverScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
+      <View style={styles.topBar}>
+        <AppBackButton fallbackRoute="/login" />
+      </View>
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -126,6 +130,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BACKGROUND_COLOR,
   },
+  topBar: {
+    paddingHorizontal: 24,
+    paddingBottom: 8,
+  },
   keyboardView: {
     flex: 1,
   },
@@ -133,7 +141,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BACKGROUND_COLOR,
     paddingHorizontal: 61,
-    paddingTop: 48,
+    paddingTop: 16,
   },
   brandBlock: {
     alignSelf: 'center',
