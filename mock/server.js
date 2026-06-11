@@ -151,6 +151,145 @@ function parseUserIdQuery(userId) {
   return parsedUserId;
 }
 
+function parseRouteUserId(userId) {
+  const parsedUserId = Number(userId);
+
+  if (!Number.isInteger(parsedUserId)) {
+    return null;
+  }
+
+  return parsedUserId;
+}
+
+function parseTimeToMinutes(time) {
+  const match = /^(\d{2}):(\d{2})$/.exec(time);
+
+  if (!match) {
+    return null;
+  }
+
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function isValidTimeLabel(time) {
+  return parseTimeToMinutes(time) !== null;
+}
+
+function getNextTaskId(tasks) {
+  const maxId = tasks.reduce((currentMax, task) => {
+    const numericId = Number(task.id);
+
+    if (!Number.isFinite(numericId)) {
+      return currentMax;
+    }
+
+    return Math.max(currentMax, numericId);
+  }, 0);
+
+  return String(maxId + 1);
+}
+
+function rebuildTimelineItems(tasks) {
+  const sortedTasks = [...tasks].sort((leftTask, rightTask) => {
+    const leftMinutes = parseTimeToMinutes(leftTask.time) ?? 0;
+    const rightMinutes = parseTimeToMinutes(rightTask.time) ?? 0;
+
+    return leftMinutes - rightMinutes;
+  });
+
+  const timelineItems = [];
+  let lastTime = null;
+
+  for (const task of sortedTasks) {
+    if (task.time !== lastTime) {
+      timelineItems.push({
+        type: 'time',
+        id: `time-${task.time.replace(':', '-')}`,
+        time: task.time,
+      });
+      lastTime = task.time;
+    }
+
+    timelineItems.push({
+      type: 'task',
+      taskId: task.id,
+    });
+  }
+
+  return timelineItems;
+}
+
+function validateTaskTimes(time, dueTime) {
+  if (!isValidTimeLabel(time)) {
+    return 'Starts at time is invalid.';
+  }
+
+  if (!isValidTimeLabel(dueTime)) {
+    return 'Due at time is invalid.';
+  }
+
+  const startMinutes = parseTimeToMinutes(time);
+  const dueMinutes = parseTimeToMinutes(dueTime);
+
+  if (dueMinutes <= startMinutes) {
+    return 'Due at must be after starts at.';
+  }
+
+  return null;
+}
+
+function validateFullTaskPayload(payload) {
+  const title = typeof payload.title === 'string' ? payload.title.trim() : '';
+  const description =
+    typeof payload.description === 'string' ? payload.description.trim() : '';
+  const detailDescription =
+    typeof payload.detailDescription === 'string'
+      ? payload.detailDescription.trim()
+      : '';
+  const time = typeof payload.time === 'string' ? payload.time.trim() : '';
+  const dueTime =
+    typeof payload.dueTime === 'string' ? payload.dueTime.trim() : '';
+
+  if (!title) {
+    return { error: 'Title cannot be empty.' };
+  }
+
+  if (!description) {
+    return { error: 'Subtitle cannot be empty.' };
+  }
+
+  if (!detailDescription) {
+    return { error: 'Description cannot be empty.' };
+  }
+
+  const timeError = validateTaskTimes(time, dueTime);
+
+  if (timeError) {
+    return { error: timeError };
+  }
+
+  return {
+    title,
+    description,
+    detailDescription,
+    time,
+    dueTime,
+  };
+}
+
+function getScheduleEntry(db, userId) {
+  return db.get('schedules').find({ userId: Number(userId) });
+}
+
+function writeScheduleTasks(scheduleEntry, tasks) {
+  scheduleEntry
+    .assign({
+      tasks,
+      timelineItems: rebuildTimelineItems(tasks),
+    })
+    .write();
+}
+
 // Demo credentials (see mock/db.json): user.name / password1234
 server.post('/login', (req, res) => {
   const { username, password } = req.body ?? {};
@@ -324,6 +463,187 @@ server.post('/admin/users', (req, res) => {
     message:
       "New user has been created. Share the username and temporary password with the user.",
   });
+});
+
+server.get('/admin/users', (req, res) => {
+  const db = router.db;
+  const users = db
+    .get('users')
+    .value()
+    .filter((entry) => !entry.isAdmin)
+    .map((entry) => ({
+      id: entry.id,
+      displayName: entry.displayName,
+      occupation: entry.occupation ?? '',
+    }))
+    .sort((leftUser, rightUser) =>
+      leftUser.displayName.localeCompare(rightUser.displayName),
+    );
+
+  res.json({ users });
+});
+
+server.post('/admin/schedules/:userId/tasks', (req, res) => {
+  const db = router.db;
+  const userId = parseRouteUserId(req.params.userId);
+
+  if (userId === null) {
+    res.status(400).json({ error: 'A valid userId is required.' });
+    return;
+  }
+
+  const scheduleEntry = getScheduleEntry(db, userId);
+
+  if (!scheduleEntry.value()) {
+    res.status(404).json({ error: 'Schedule not found.' });
+    return;
+  }
+
+  const validation = validateFullTaskPayload(req.body ?? {});
+
+  if (validation.error) {
+    res.status(400).json({ error: validation.error });
+    return;
+  }
+
+  const schedule = scheduleEntry.value();
+  const newTask = {
+    id: getNextTaskId(schedule.tasks),
+    time: validation.time,
+    dueTime: validation.dueTime,
+    title: validation.title,
+    description: validation.description,
+    detailDescription: validation.detailDescription,
+    status: 'todo',
+    completedStatus: 'done',
+    completedMessage: 'Well done on time! 🎉',
+  };
+
+  const nextTasks = [...schedule.tasks, newTask];
+  writeScheduleTasks(scheduleEntry, nextTasks);
+
+  res.status(201).json({ task: newTask });
+});
+
+server.patch('/admin/schedules/:userId/tasks/:taskId', (req, res) => {
+  const db = router.db;
+  const userId = parseRouteUserId(req.params.userId);
+
+  if (userId === null) {
+    res.status(400).json({ error: 'A valid userId is required.' });
+    return;
+  }
+
+  const scheduleEntry = getScheduleEntry(db, userId);
+
+  if (!scheduleEntry.value()) {
+    res.status(404).json({ error: 'Schedule not found.' });
+    return;
+  }
+
+  const taskEntry = scheduleEntry.get('tasks').find({ id: req.params.taskId });
+
+  if (!taskEntry.value()) {
+    res.status(404).json({ error: 'Task not found.' });
+    return;
+  }
+
+  const currentTask = taskEntry.value();
+  const payload = req.body ?? {};
+  const hasFullPayload =
+    'title' in payload ||
+    'description' in payload ||
+    'detailDescription' in payload;
+
+  let nextTask;
+
+  if (hasFullPayload) {
+    const validation = validateFullTaskPayload({
+      title: payload.title ?? currentTask.title,
+      description: payload.description ?? currentTask.description,
+      detailDescription:
+        payload.detailDescription ?? currentTask.detailDescription,
+      time: payload.time ?? currentTask.time,
+      dueTime: payload.dueTime ?? currentTask.dueTime,
+    });
+
+    if (validation.error) {
+      res.status(400).json({ error: validation.error });
+      return;
+    }
+
+    nextTask = {
+      ...currentTask,
+      title: validation.title,
+      description: validation.description,
+      detailDescription: validation.detailDescription,
+      time: validation.time,
+      dueTime: validation.dueTime,
+    };
+  } else {
+    const nextTime =
+      typeof payload.time === 'string' ? payload.time.trim() : currentTask.time;
+    const nextDueTime =
+      typeof payload.dueTime === 'string'
+        ? payload.dueTime.trim()
+        : currentTask.dueTime;
+    const timeError = validateTaskTimes(nextTime, nextDueTime);
+
+    if (timeError) {
+      res.status(400).json({ error: timeError });
+      return;
+    }
+
+    nextTask = {
+      ...currentTask,
+      time: nextTime,
+      dueTime: nextDueTime,
+    };
+  }
+
+  taskEntry.assign(nextTask).write();
+
+  const updatedTasks = scheduleEntry
+    .get('tasks')
+    .value()
+    .map((entry) => (entry.id === nextTask.id ? nextTask : entry));
+
+  writeScheduleTasks(scheduleEntry, updatedTasks);
+
+  res.json({ task: nextTask });
+});
+
+server.delete('/admin/schedules/:userId/tasks/:taskId', (req, res) => {
+  const db = router.db;
+  const userId = parseRouteUserId(req.params.userId);
+
+  if (userId === null) {
+    res.status(400).json({ error: 'A valid userId is required.' });
+    return;
+  }
+
+  const scheduleEntry = getScheduleEntry(db, userId);
+
+  if (!scheduleEntry.value()) {
+    res.status(404).json({ error: 'Schedule not found.' });
+    return;
+  }
+
+  const schedule = scheduleEntry.value();
+  const hasTask = schedule.tasks.some((entry) => entry.id === req.params.taskId);
+
+  if (!hasTask) {
+    res.status(404).json({ error: 'Task not found.' });
+    return;
+  }
+
+  const nextTasks = schedule.tasks.filter(
+    (entry) => entry.id !== req.params.taskId,
+  );
+
+  writeScheduleTasks(scheduleEntry, nextTasks);
+
+  res.status(204).send();
 });
 
 server.get('/schedule', (req, res) => {

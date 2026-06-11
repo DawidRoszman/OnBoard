@@ -32,6 +32,12 @@ export type CreateUserSuccess = {
   message: string;
 };
 
+export type AdminUserSummary = {
+  id: number;
+  displayName: string;
+  occupation: string;
+};
+
 export class AdminError extends Error {
   constructor(
     message: string,
@@ -40,6 +46,18 @@ export class AdminError extends Error {
     super(message);
     this.name = 'AdminError';
   }
+}
+
+export async function listUsers(): Promise<AdminUserSummary[]> {
+  const response = await fetch(`${API_BASE_URL}/admin/users`);
+  const body = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message = getAdminErrorMessage(body, response.status);
+    throw new AdminError(message, response.status);
+  }
+
+  return (body as { users: AdminUserSummary[] }).users;
 }
 
 export async function createUser(
