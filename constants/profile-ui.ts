@@ -1,0 +1,12 @@
+export const PROFILE_BANNER_COLOR = 'rgba(98, 148, 96, 0.55)';
+export const PROFILE_CARD_ROW_COLOR = '#F8F9FE';
+export const PROFILE_SUBTITLE_COLOR = '#71727A';
+export const PROFILE_ERROR_COLOR = '#FF616D';
+export const PROFILE_AVATAR_FALLBACK_COLOR = '#333333';
+export const PROFILE_NAME_COLOR = '#FFFFFF';
+export const PROFILE_ROLE_COLOR = '#FFFFFF';
+export const PROFILE_CARD_RADIUS = 20;
+export const PROFILE_ROW_RADIUS = 16;
+export const PROFILE_AVATAR_SIZE = 128;
+export const PROFILE_ICON_COLUMN_WIDTH = 80;
+export const PROFILE_EDIT_BUBBLE_SIZE = 30;

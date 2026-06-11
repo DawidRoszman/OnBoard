@@ -11,6 +11,9 @@ export type AuthUser = {
   dateOfBirth?: string;
   address?: string;
   occupation?: string;
+  avatarUri?: string;
+  language?: string;
+  hasNotificationsEnabled?: boolean;
   isAdmin: boolean;
   mustSetupPassword: boolean;
   createdAt?: string;

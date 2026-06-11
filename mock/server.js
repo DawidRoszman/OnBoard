@@ -41,9 +41,55 @@ function toPublicUser(user) {
     dateOfBirth: publicUser.dateOfBirth,
     address: publicUser.address,
     occupation: publicUser.occupation,
+    avatarUri: publicUser.avatarUri ?? '',
+    language: publicUser.language ?? 'en',
+    hasNotificationsEnabled: Boolean(publicUser.hasNotificationsEnabled),
     isAdmin: Boolean(publicUser.isAdmin),
     mustSetupPassword: Boolean(publicUser.mustSetupPassword),
     createdAt: publicUser.createdAt,
+  };
+}
+
+function getUserEntry(db, userId) {
+  return db.get('users').find({ id: Number(userId) });
+}
+
+function validateProfilePayload(payload) {
+  const firstName =
+    typeof payload.firstName === 'string' ? payload.firstName.trim() : '';
+  const lastName =
+    typeof payload.lastName === 'string' ? payload.lastName.trim() : '';
+  const email = typeof payload.email === 'string' ? payload.email.trim() : '';
+  const phone = typeof payload.phone === 'string' ? payload.phone.trim() : '';
+  const address =
+    typeof payload.address === 'string' ? payload.address.trim() : '';
+
+  if (!firstName) {
+    return { error: 'First name cannot be empty.' };
+  }
+
+  if (!lastName) {
+    return { error: 'Last name cannot be empty.' };
+  }
+
+  if (!email || !email.includes('@')) {
+    return { error: 'Enter correct email address.' };
+  }
+
+  if (!phone) {
+    return { error: 'Enter correct phone number.' };
+  }
+
+  if (!address) {
+    return { error: 'Enter correct address.' };
+  }
+
+  return {
+    firstName,
+    lastName,
+    email,
+    phone,
+    address,
   };
 }
 
@@ -449,6 +495,9 @@ server.post('/admin/users', (req, res) => {
     username: normalizedUsername,
     displayName: `${firstName.trim()} ${lastName.trim()}`,
     password: temporaryPassword,
+    avatarUri: '',
+    language: 'en',
+    hasNotificationsEnabled: false,
     isAdmin: false,
     mustSetupPassword: true,
     createdAt: new Date().toISOString(),
@@ -644,6 +693,165 @@ server.delete('/admin/schedules/:userId/tasks/:taskId', (req, res) => {
   writeScheduleTasks(scheduleEntry, nextTasks);
 
   res.status(204).send();
+});
+
+server.get('/profile', (req, res) => {
+  const db = router.db;
+  const userId = parseUserIdQuery(req.query.userId);
+
+  if (userId === null) {
+    res.status(400).json({ error: 'A valid userId query parameter is required.' });
+    return;
+  }
+
+  const userEntry = getUserEntry(db, userId);
+
+  if (!userEntry.value()) {
+    res.status(404).json({ error: 'Profile not found.' });
+    return;
+  }
+
+  res.json({ user: toPublicUser(userEntry.value()) });
+});
+
+server.patch('/profile', (req, res) => {
+  const db = router.db;
+  const userId = parseUserIdQuery(req.query.userId);
+
+  if (userId === null) {
+    res.status(400).json({ error: 'A valid userId query parameter is required.' });
+    return;
+  }
+
+  const userEntry = getUserEntry(db, userId);
+
+  if (!userEntry.value()) {
+    res.status(404).json({ error: 'Profile not found.' });
+    return;
+  }
+
+  const validation = validateProfilePayload(req.body ?? {});
+
+  if (validation.error) {
+    res.status(400).json({ error: validation.error });
+    return;
+  }
+
+  const currentUser = userEntry.value();
+  const updatedUser = {
+    ...currentUser,
+    firstName: validation.firstName,
+    lastName: validation.lastName,
+    email: validation.email,
+    phone: validation.phone,
+    address: validation.address,
+    displayName: `${validation.firstName} ${validation.lastName}`,
+  };
+
+  userEntry.assign(updatedUser).write();
+
+  res.json({ user: toPublicUser(updatedUser) });
+});
+
+server.patch('/profile/preferences', (req, res) => {
+  const db = router.db;
+  const userId = parseUserIdQuery(req.query.userId);
+
+  if (userId === null) {
+    res.status(400).json({ error: 'A valid userId query parameter is required.' });
+    return;
+  }
+
+  const userEntry = getUserEntry(db, userId);
+
+  if (!userEntry.value()) {
+    res.status(404).json({ error: 'Profile not found.' });
+    return;
+  }
+
+  const { language, hasNotificationsEnabled } = req.body ?? {};
+  const updates = {};
+
+  if (typeof language === 'string' && language.trim()) {
+    updates.language = language.trim();
+  }
+
+  if (typeof hasNotificationsEnabled === 'boolean') {
+    updates.hasNotificationsEnabled = hasNotificationsEnabled;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    res.status(400).json({ error: 'No valid preference fields provided.' });
+    return;
+  }
+
+  const updatedUser = {
+    ...userEntry.value(),
+    ...updates,
+  };
+
+  userEntry.assign(updatedUser).write();
+
+  res.json({ user: toPublicUser(updatedUser) });
+});
+
+server.post('/profile/avatar', (req, res) => {
+  const db = router.db;
+  const userId = parseUserIdQuery(req.query.userId);
+
+  if (userId === null) {
+    res.status(400).json({ error: 'A valid userId query parameter is required.' });
+    return;
+  }
+
+  const userEntry = getUserEntry(db, userId);
+
+  if (!userEntry.value()) {
+    res.status(404).json({ error: 'Profile not found.' });
+    return;
+  }
+
+  const { avatarUri } = req.body ?? {};
+
+  if (typeof avatarUri !== 'string' || !avatarUri.trim()) {
+    res.status(400).json({ error: 'A valid avatar URI is required.' });
+    return;
+  }
+
+  const updatedUser = {
+    ...userEntry.value(),
+    avatarUri: avatarUri.trim(),
+  };
+
+  userEntry.assign(updatedUser).write();
+
+  res.json({ user: toPublicUser(updatedUser) });
+});
+
+server.delete('/profile/avatar', (req, res) => {
+  const db = router.db;
+  const userId = parseUserIdQuery(req.query.userId);
+
+  if (userId === null) {
+    res.status(400).json({ error: 'A valid userId query parameter is required.' });
+    return;
+  }
+
+  const userEntry = getUserEntry(db, userId);
+
+  if (!userEntry.value()) {
+    res.status(404).json({ error: 'Profile not found.' });
+    return;
+  }
+
+  const updatedUser = {
+    ...userEntry.value(),
+    avatarUri: '',
+  };
+
+  userEntry.assign(updatedUser).write();
+
+  res.json({ user: toPublicUser(updatedUser) });
 });
 
 server.get('/schedule', (req, res) => {
