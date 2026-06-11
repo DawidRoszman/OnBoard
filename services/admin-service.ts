@@ -35,7 +35,10 @@ export type CreateUserSuccess = {
 export type AdminUserSummary = {
   id: number;
   displayName: string;
+  firstName: string;
+  lastName: string;
   occupation: string;
+  avatarUri: string;
 };
 
 export class AdminError extends Error {

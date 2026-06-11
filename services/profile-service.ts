@@ -17,6 +17,10 @@ export type UpdateProfilePreferencesPayload = {
   hasNotificationsEnabled?: boolean;
 };
 
+export type ProfileMutationOptions = {
+  shouldSyncSession?: boolean;
+};
+
 export class ProfileError extends Error {
   constructor(
     message: string,
@@ -51,6 +55,15 @@ export function syncAuthUserFromProfile(user: ProfileUser) {
   setAuthUser(user);
 }
 
+function maybeSyncAuthUserFromProfile(
+  user: ProfileUser,
+  options: ProfileMutationOptions = {},
+) {
+  if (options.shouldSyncSession !== false) {
+    syncAuthUserFromProfile(user);
+  }
+}
+
 export async function getProfile(userId: number): Promise<ProfileUser> {
   const response = await fetch(`${API_BASE_URL}/profile?userId=${userId}`);
   const body = await response.json().catch(() => ({}));
@@ -70,6 +83,7 @@ export async function getProfile(userId: number): Promise<ProfileUser> {
 export async function updateProfile(
   userId: number,
   payload: UpdateProfilePayload,
+  options: ProfileMutationOptions = {},
 ): Promise<ProfileUser> {
   const response = await fetch(`${API_BASE_URL}/profile?userId=${userId}`, {
     method: 'PATCH',
@@ -89,13 +103,14 @@ export async function updateProfile(
   }
 
   const user = (body as { user: ProfileUser }).user;
-  syncAuthUserFromProfile(user);
+  maybeSyncAuthUserFromProfile(user, options);
   return user;
 }
 
 export async function updateProfilePreferences(
   userId: number,
   payload: UpdateProfilePreferencesPayload,
+  options: ProfileMutationOptions = {},
 ): Promise<ProfileUser> {
   const response = await fetch(
     `${API_BASE_URL}/profile/preferences?userId=${userId}`,
@@ -118,13 +133,14 @@ export async function updateProfilePreferences(
   }
 
   const user = (body as { user: ProfileUser }).user;
-  syncAuthUserFromProfile(user);
+  maybeSyncAuthUserFromProfile(user, options);
   return user;
 }
 
 export async function uploadProfileAvatar(
   userId: number,
   avatarUri: string,
+  options: ProfileMutationOptions = {},
 ): Promise<ProfileUser> {
   const response = await fetch(`${API_BASE_URL}/profile/avatar?userId=${userId}`, {
     method: 'POST',
@@ -144,11 +160,14 @@ export async function uploadProfileAvatar(
   }
 
   const user = (body as { user: ProfileUser }).user;
-  syncAuthUserFromProfile(user);
+  maybeSyncAuthUserFromProfile(user, options);
   return user;
 }
 
-export async function removeProfileAvatar(userId: number): Promise<ProfileUser> {
+export async function removeProfileAvatar(
+  userId: number,
+  options: ProfileMutationOptions = {},
+): Promise<ProfileUser> {
   const response = await fetch(`${API_BASE_URL}/profile/avatar?userId=${userId}`, {
     method: 'DELETE',
   });
@@ -165,6 +184,6 @@ export async function removeProfileAvatar(userId: number): Promise<ProfileUser> 
   }
 
   const user = (body as { user: ProfileUser }).user;
-  syncAuthUserFromProfile(user);
+  maybeSyncAuthUserFromProfile(user, options);
   return user;
 }

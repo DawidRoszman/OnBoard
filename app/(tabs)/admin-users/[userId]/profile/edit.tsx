@@ -1,26 +1,36 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { Text, View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppBackButton } from '@/components/app-back-button';
 import { AppNavBar } from '@/components/app-navbar';
 import { ProfileEditView } from '@/components/profile/profile-edit-view';
 import { BACKGROUND_COLOR, LABEL_COLOR } from '@/constants/auth-ui';
-import { getAuthUser } from '@/services/auth-session';
 
-export default function ProfileEditScreen() {
-  const authUser = getAuthUser();
+function parseUserIdParam(userId: string | string[] | undefined): number | null {
+  const rawValue = Array.isArray(userId) ? userId[0] : userId;
+  const parsedUserId = Number(rawValue);
 
-  if (!authUser) {
+  if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
+    return null;
+  }
+
+  return parsedUserId;
+}
+
+export default function AdminUserProfileEditScreen() {
+  const { userId } = useLocalSearchParams<{ userId?: string }>();
+  const parsedUserId = parseUserIdParam(userId);
+
+  if (parsedUserId === null) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <AppNavBar
           title="Profile"
-          leftAction={<AppBackButton fallbackRoute="/(tabs)/profile" />}
+          leftAction={<AppBackButton fallbackRoute="/(tabs)/admin-users" />}
         />
         <View style={styles.centered}>
-          <Text style={styles.errorText}>
-            You must be signed in to edit your profile.
-          </Text>
+          <Text style={styles.errorText}>A valid user is required.</Text>
         </View>
       </SafeAreaView>
     );
@@ -28,9 +38,9 @@ export default function ProfileEditScreen() {
 
   return (
     <ProfileEditView
-      userId={authUser.id}
-      fallbackRoute="/(tabs)/profile"
-      shouldSyncSession
+      userId={parsedUserId}
+      fallbackRoute="/(tabs)/admin-users"
+      shouldSyncSession={false}
     />
   );
 }

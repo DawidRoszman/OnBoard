@@ -523,7 +523,10 @@ server.get('/admin/users', (req, res) => {
     .map((entry) => ({
       id: entry.id,
       displayName: entry.displayName,
+      firstName: entry.firstName ?? '',
+      lastName: entry.lastName ?? '',
       occupation: entry.occupation ?? '',
+      avatarUri: entry.avatarUri ?? '',
     }))
     .sort((leftUser, rightUser) =>
       leftUser.displayName.localeCompare(rightUser.displayName),

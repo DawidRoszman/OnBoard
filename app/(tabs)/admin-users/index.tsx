@@ -5,7 +5,6 @@ import type { ComponentProps } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -16,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppBackButton } from '@/components/app-back-button';
 import { AppNavBar } from '@/components/app-navbar';
+import { UserAvatar } from '@/components/user-avatar';
 import {
   BACKGROUND_COLOR,
   MESSAGE_COLOR,
@@ -117,6 +117,12 @@ export default function AdminUsersScreen() {
     router.push(withReturnTo(scheduleRoute, '/(tabs)/admin-users'));
   }
 
+  function openEditProfile(user: AdminUserSummary) {
+    const profileEditRoute = `/(tabs)/admin-users/${user.id}/profile/edit`;
+
+    router.push(withReturnTo(profileEditRoute, '/(tabs)/admin-users'));
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <AppNavBar
@@ -152,11 +158,12 @@ export default function AdminUsersScreen() {
             {visibleUsers.map((user) => (
               <View key={user.id} style={styles.userCard}>
                 <View style={styles.userHeader}>
-                  <Image
-                    source={require('@/assets/images/admin-user-avatar.png')}
-                    style={styles.avatar}
-                    resizeMode="cover"
-                    accessibilityLabel={`${user.displayName} avatar`}
+                  <UserAvatar
+                    displayName={user.displayName}
+                    firstName={user.firstName}
+                    lastName={user.lastName}
+                    avatarUri={user.avatarUri}
+                    size={45}
                   />
 
                   <View style={styles.userText}>
@@ -184,6 +191,7 @@ export default function AdminUsersScreen() {
                   <UserActionButton
                     iconName="create-outline"
                     label="Edit Profile"
+                    onPress={() => openEditProfile(user)}
                   />
                 </View>
               </View>
@@ -248,11 +256,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-  },
-  avatar: {
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
   },
   userText: {
     flex: 1,

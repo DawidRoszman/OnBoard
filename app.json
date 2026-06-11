@@ -39,7 +39,13 @@
           }
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow OnBoard to access your photos to upload a profile avatar."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

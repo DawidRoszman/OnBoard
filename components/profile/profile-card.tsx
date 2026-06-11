@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BRAND_COLOR } from '@/constants/auth-ui';
 import {
@@ -65,7 +66,11 @@ export function ProfileCard({
         <View style={styles.avatarContainer}>
           <View style={styles.avatarWrapper}>
             {hasAvatar ? (
-              <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+              <Image
+                source={{ uri: avatarUri }}
+                style={styles.avatarImage}
+                contentFit="cover"
+              />
             ) : (
               <View style={styles.avatarFallback}>
                 <Text style={styles.avatarInitials}>{initials}</Text>

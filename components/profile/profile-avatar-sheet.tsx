@@ -1,6 +1,8 @@
-import { Modal, Pressable, StyleSheet, Text } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MESSAGE_COLOR } from '@/constants/auth-ui';
+import { PROFILE_SUBTITLE_COLOR } from '@/constants/profile-ui';
 
 type ProfileAvatarSheetProps = {
   isVisible: boolean;
@@ -23,26 +25,39 @@ export function ProfileAvatarSheet({
       transparent
       animationType="fade"
       onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={(event) => event.stopPropagation()}>
-          <Pressable
-            style={styles.actionRow}
-            onPress={onUploadPress}
-            accessibilityRole="button"
-            accessibilityLabel="Upload avatar">
-            <Text style={styles.actionText}>Upload Avatar</Text>
-          </Pressable>
-          {hasAvatar ? (
+      <View style={styles.overlay}>
+        <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
+        <SafeAreaView edges={['bottom']} style={styles.sheetSafeArea}>
+          <View style={styles.sheet}>
             <Pressable
               style={styles.actionRow}
-              onPress={onRemovePress}
+              onPress={onUploadPress}
               accessibilityRole="button"
-              accessibilityLabel="Remove avatar">
-              <Text style={styles.actionText}>Remove Avatar</Text>
+              accessibilityLabel="Choose photo from library">
+              <Text style={styles.actionText}>Upload Avatar</Text>
+              <Text style={styles.actionHint}>Choose from photo library</Text>
             </Pressable>
-          ) : null}
-        </Pressable>
-      </Pressable>
+            {hasAvatar ? (
+              <Pressable
+                style={styles.actionRow}
+                onPress={onRemovePress}
+                accessibilityRole="button"
+                accessibilityLabel="Remove avatar">
+                <Text style={[styles.actionText, styles.removeActionText]}>
+                  Remove Avatar
+                </Text>
+              </Pressable>
+            ) : null}
+            <Pressable
+              style={styles.cancelRow}
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel">
+              <Text style={styles.cancelText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </View>
     </Modal>
   );
 }
@@ -50,26 +65,49 @@ export function ProfileAvatarSheet({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
-  sheet: {
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  sheetSafeArea: {
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    paddingBottom: 32,
+  },
+  sheet: {
     paddingTop: 8,
   },
   actionRow: {
-    paddingVertical: 18,
+    paddingVertical: 16,
     paddingHorizontal: 24,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E8E8E8',
+    gap: 4,
   },
   actionText: {
     fontSize: 16,
     fontWeight: '600',
     color: MESSAGE_COLOR,
+    textAlign: 'center',
+  },
+  actionHint: {
+    fontSize: 12,
+    color: PROFILE_SUBTITLE_COLOR,
+    textAlign: 'center',
+  },
+  removeActionText: {
+    color: '#FF616D',
+  },
+  cancelRow: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+  },
+  cancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: PROFILE_SUBTITLE_COLOR,
     textAlign: 'center',
   },
 });
