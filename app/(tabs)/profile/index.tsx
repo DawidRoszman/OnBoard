@@ -1,19 +1,13 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppNavBar } from '@/components/app-navbar';
 import { ProfileCard } from '@/components/profile/profile-card';
 import { ProfileSettingsRow } from '@/components/profile/profile-settings-row';
+import { ProfileSettingsSwitch } from '@/components/profile/profile-settings-switch';
 import { BACKGROUND_COLOR, BRAND_COLOR, MESSAGE_COLOR } from '@/constants/auth-ui';
 import {
   getProfileLanguageLabel,
@@ -198,27 +192,21 @@ export default function ProfileScreen() {
             title="Language"
             subtitle={getProfileLanguageLabel(profile.language)}
             trailing={
-              <View style={styles.languageSwitch}>
-                <Switch
-                  value={isPolishLanguage(profile.language)}
-                  onValueChange={handleLanguageToggle}
-                  disabled={isUpdatingLanguage}
-                  trackColor={{ false: '#D3D3D3', true: BRAND_COLOR }}
-                  thumbColor="#FFFFFF"
-                />
-              </View>
+              <ProfileSettingsSwitch
+                value={isPolishLanguage(profile.language)}
+                onValueChange={handleLanguageToggle}
+                disabled={isUpdatingLanguage}
+              />
             }
           />
           <ProfileSettingsRow
             iconName="notifications-outline"
             title="Notifications"
             trailing={
-              <Switch
+              <ProfileSettingsSwitch
                 value={Boolean(profile.hasNotificationsEnabled)}
                 onValueChange={handleNotificationsToggle}
                 disabled={isUpdatingNotifications}
-                trackColor={{ false: '#D3D3D3', true: BRAND_COLOR }}
-                thumbColor="#FFFFFF"
               />
             }
           />
@@ -246,9 +234,6 @@ const styles = StyleSheet.create({
   },
   settingsList: {
     gap: 12,
-  },
-  languageSwitch: {
-    transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }],
   },
   errorText: {
     color: MESSAGE_COLOR,

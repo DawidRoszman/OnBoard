@@ -195,9 +195,10 @@
           "title": "Code review: payment service",
           "description": "Review PR #251 for the payment retry logic",
           "detailDescription": "Review the payment service pull request focusing on idempotency, retry backoff, logging, and edge cases around failed transactions. Ensure tests cover timeout and duplicate-request scenarios.",
-          "status": "todo",
+          "status": "done",
           "completedStatus": "done",
-          "completedMessage": "Well done on time! 🎉"
+          "completedMessage": "Well done on time! 🎉",
+          "completedTime": "16:26"
         },
         {
           "id": "10",
@@ -347,8 +348,30 @@
       "userId": 4,
       "greeting": "Good morning!",
       "footerText": "See you next time!",
-      "tasks": [],
-      "timelineItems": []
+      "tasks": [
+        {
+          "id": "1",
+          "time": "09:00",
+          "dueTime": "09:15",
+          "title": "Check-email",
+          "description": "Start your day with the email",
+          "detailDescription": "Check for new email in the mailbox",
+          "status": "todo",
+          "completedStatus": "done",
+          "completedMessage": "Well done on time! 🎉"
+        }
+      ],
+      "timelineItems": [
+        {
+          "type": "time",
+          "id": "time-09-00",
+          "time": "09:00"
+        },
+        {
+          "type": "task",
+          "taskId": "1"
+        }
+      ]
     },
     {
       "userId": 5,

@@ -941,14 +941,14 @@ server.post('/reset-password', (req, res) => {
 server.use(router);
 
 const httpServer = server.listen(PORT, () => {
-  console.log(`Mock API running at http://localhost:${PORT}`);
+  console.log(`Mock API running at http://0.0.0.0:${PORT}`);
 });
 
 function probeRecoverEndpoint() {
   return new Promise((resolve) => {
     const request = http.request(
       {
-        hostname: 'localhost',
+        hostname: '0.0.0.0',
         port: PORT,
         path: '/recover',
         method: 'POST',

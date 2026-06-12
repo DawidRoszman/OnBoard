@@ -4,7 +4,7 @@ const DEFAULT_PORT = 3004;
 
 function getDefaultHost(): string {
   if (Platform.OS === 'android') {
-    return `http://10.0.2.2:${DEFAULT_PORT}`;
+    return `http://100.123.252.14:${DEFAULT_PORT}`;
   }
   return `http://localhost:${DEFAULT_PORT}`;
 }
